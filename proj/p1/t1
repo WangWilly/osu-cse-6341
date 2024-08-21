@@ -1,0 +1,9 @@
+int x = 1; 
+int z = 4;
+float y = 5.6;
+int w;
+w = x+z+5;
+print 2+x+(z+w)+5;
+
+
+
