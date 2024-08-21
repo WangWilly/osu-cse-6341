@@ -1,0 +1,10 @@
+[wang.18624@coe-dnc268474s p1]$ ./plan t2
+int x = (5+3);
+int y = x;
+Process returned 0
+[wang.18624@coe-dnc268474s p1]$ ./plan t3
+Syntax error for input symbol "int" spanning from t3:2/5(-1) to t3:2/7(-1)
+instead expected token classes are [LPAREN, INTCONST, FLOATCONST, IDENT]
+Couldn't repair and continue parse (Symbol: int (t3:2/5(-1) - t3:2/7(-1)))
+Process returned 1
+
