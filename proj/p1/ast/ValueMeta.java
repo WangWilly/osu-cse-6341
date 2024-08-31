@@ -2,28 +2,35 @@ package ast;
 
 public final class ValueMeta {
     public enum ValueType {
-        INT, FLOAT
+        INT, FLOAT, UNDEFINED
     }
 
     private String ident;
     private ValueType type;
-    private Integer intValue;
-    private Float floatValue;
+    private Long intValue;
+    private Double floatValue;
 
     public ValueMeta(String ident, ValueType type) {
         this.ident = ident;
         this.type = type;
     }
 
-    public ValueMeta(String ident, ValueType type, Integer intValue) {
+    public ValueMeta(String ident, ValueType type, Long intValue) {
         this.ident = ident;
         this.type = type;
         this.intValue = intValue;
     }
 
-    public ValueMeta(String ident, ValueType type, Float floatValue) {
+    public ValueMeta(String ident, ValueType type, Double floatValue) {
         this.ident = ident;
         this.type = type;
+        this.floatValue = floatValue;
+    }
+
+    public ValueMeta(String ident, ValueType type, Long intValue, Double floatValue) {
+        this.ident = ident;
+        this.type = type;
+        this.intValue = intValue;
         this.floatValue = floatValue;
     }
 
@@ -35,11 +42,17 @@ public final class ValueMeta {
         return type;
     }
 
-    public Integer getIntValue() {
+    public Long getIntValue() {
         return intValue;
     }
 
-    public Float getFloatValue() {
+    public Double getFloatValue() {
         return floatValue;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    public ValueMeta copyWithIdent(String ident) {
+        return new ValueMeta(ident, this.type, this.intValue, this.floatValue);
     }
 }
