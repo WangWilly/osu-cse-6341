@@ -12,4 +12,4 @@ proj/p1/parser/sym.java
 proj/jflex-1.7.0/target/
 
 # packed output
-proj/p1.tar.gz
+dist/

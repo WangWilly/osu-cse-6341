@@ -10,3 +10,6 @@ make clean
 
 cd $project_dir
 tar -cvzf p1.tar.gz p1
+
+mkdir -p $current_dir/dist
+mv p1.tar.gz $current_dir/dist
