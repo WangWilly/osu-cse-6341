@@ -1,0 +1,1 @@
+int x = 1; float y = 3.14; float z = y + 1.1; int w = x + z;

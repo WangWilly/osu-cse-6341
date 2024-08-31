@@ -1,0 +1,1 @@
+int x = 1; int w = 2; int y = x + w;
