@@ -17,7 +17,7 @@ CUP_DIR="<path-to-this-repo>/proj/cup"
 - [file](https://drive.google.com/drive/folders/1Cqnf5uVXdf0XAzXjrXIoilNs31VMRPrB?usp=sharing)
 
 ```bash
-cd p1
+cd proj/p1
 make
 
 ./plan t1
