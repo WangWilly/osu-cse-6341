@@ -1,0 +1,4 @@
+# compiled java classes
+ast/*.class
+interpreter/*.class
+parser/*.class
