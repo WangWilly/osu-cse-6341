@@ -1,4 +1,9 @@
 # compiled java classes
-ast/*.class
-interpreter/*.class
-parser/*.class
+proj/p1/ast/*.class
+proj/p1/interpreter/*.class
+proj/p1/parser/*.class
+
+# make output
+proj/p1/parser/Lexer.java
+proj/p1/parser/Parser.java
+proj/p1/parser/sym.java
