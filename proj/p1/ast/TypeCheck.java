@@ -11,16 +11,83 @@ public final class TypeCheck {
         this.symbolTable = new HashMap < String, ValueMeta > ();
     }
 
-    public void addSymbol(String name, ValueMeta meta) {
-        this.symbolTable.put(name, meta);
+    ////////////////////////////////////////////////////////////////////////////
+    // Decl (helper)
+
+    public ValueMeta.ValueType getVarDeclType(VarDecl varDecl) {
+        if (varDecl instanceof IntVarDecl) {
+            return ValueMeta.ValueType.INT;
+        }
+        if (varDecl instanceof FloatVarDecl) {
+            return ValueMeta.ValueType.FLOAT;
+        }
+        return ValueMeta.ValueType.UNDEFINED;
     }
 
-    public ValueMeta getSymbol(String name) {
-        return this.symbolTable.get(name);
+    public ValueMeta.ValueType getDeclType(Decl decl) {
+        if (decl.expr == null) {
+            return getVarDeclType(decl.varDecl);
+        }
+        
+        ValueMeta.ValueType varDeclType = getVarDeclType(decl.varDecl);
+        ValueMeta.ValueType exprType = getExprType(decl.expr);
+
+        if (varDeclType == ValueMeta.ValueType.UNDEFINED || exprType == ValueMeta.ValueType.UNDEFINED) {
+            return ValueMeta.ValueType.UNDEFINED;
+        }
+
+        if (varDeclType == exprType) {
+            return varDeclType;
+        }
+
+        return ValueMeta.ValueType.UNDEFINED;
     }
 
     ////////////////////////////////////////////////////////////////////////////
     // Decl
+
+    public boolean checkDecl(Decl decl) {
+        // Validate
+        if (decl.expr == null) {
+            return checkVarDecl(decl.varDecl);
+        }
+        if (!(checkVarDecl(decl.varDecl) && checkExpr(decl.expr))) {
+            return false;
+        }
+
+        // Check
+        ValueMeta.ValueType declType = getDeclType(decl);
+        if (declType == ValueMeta.ValueType.UNDEFINED) {
+            return false;
+        }
+
+        // Update
+        if (declType == ValueMeta.ValueType.INT) {
+            ValueMeta value = getExprValue(decl.expr).copyWithIdent(decl.varDecl.ident);
+            this.symbolTable.put(decl.varDecl.ident, value);
+            return true;
+        }
+        if (declType == ValueMeta.ValueType.FLOAT) {
+            ValueMeta value = getExprValue(decl.expr).copyWithIdent(decl.varDecl.ident);
+            this.symbolTable.put(decl.varDecl.ident, value);
+            return true;
+        }
+
+        return false;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // VarDecl
+
+    public boolean checkVarDecl(VarDecl varDecl) {
+        if (varDecl instanceof IntVarDecl) {
+            return checkIntVarDecl((IntVarDecl) varDecl);
+        }
+        if (varDecl instanceof FloatVarDecl) {
+            return checkFloatVarDecl((FloatVarDecl) varDecl);
+        }
+        return false;
+    }
 
     public boolean checkIntVarDecl(IntVarDecl varDecl) {
         if (this.symbolTable.containsKey(varDecl.ident)) {
