@@ -19,4 +19,7 @@ public class UnitList extends ASTNode {
         ps.println();
         if (unitList != null) unitList.print(ps);
     }
+    public boolean checkType(TypeCheck typeCheck) {
+        return unit.checkType(typeCheck) && (unitList == null || unitList.checkType(typeCheck));
+    }
 }
