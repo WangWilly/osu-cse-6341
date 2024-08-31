@@ -20,6 +20,15 @@ public class UnitList extends ASTNode {
         if (unitList != null) unitList.print(ps);
     }
     public boolean checkType(TypeCheck typeCheck) {
-        return unit.checkType(typeCheck) && (unitList == null || unitList.checkType(typeCheck));
+        // TODO: (POMV) not to use early return
+        // return unit.checkType(typeCheck) && (unitList == null || unitList.checkType(typeCheck));
+
+        if (!unit.checkType(typeCheck)) {
+            return false;
+        }
+        if (unitList == null) {
+            return true;
+        }
+        return unitList.checkType(typeCheck);
     }
 }
