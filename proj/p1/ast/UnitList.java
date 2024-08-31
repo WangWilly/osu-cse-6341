@@ -6,18 +6,20 @@ public class UnitList extends ASTNode {
     public final UnitList unitList; 
     public UnitList(Unit u, UnitList ul, Location loc) {
         super(loc);
-	unit = u;
-	unitList = ul;
+        unit = u;
+        unitList = ul;
     }
     public UnitList(Unit u, Location loc) { 
         super(loc);
-	unit = u;
+        unit = u;
         unitList = null;
     }
     public void print(PrintStream ps) {
-	unit.print(ps);
-	ps.println();
-	if (unitList != null)
-	    unitList.print(ps);
+        unit.print(ps);
+        ps.println();
+        if (unitList != null) unitList.print(ps);
+    }
+    public boolean checkType(TypeCheck typeCheck) {
+        return unit.checkType(typeCheck) && (unitList == null || unitList.checkType(typeCheck));
     }
 }

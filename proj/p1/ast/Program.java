@@ -8,6 +8,9 @@ public class Program extends ASTNode {
         unitList = ul;
     }
     public void print(PrintStream ps) {
-	unitList.print(ps);
+        unitList.print(ps);
+    }
+    public boolean checkType(TypeCheck typeCheck) {
+        return unitList.checkType(typeCheck);
     }
 }
