@@ -249,4 +249,8 @@ public final class TypeCheck {
 
         return true;
     }
+
+    public boolean checkPrintStmt(PrintStmt printStmt) {
+        return checkExpr(printStmt.expr);
+    }
 }
