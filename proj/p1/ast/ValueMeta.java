@@ -27,7 +27,7 @@ public final class ValueMeta {
         this.floatValue = floatValue;
     }
 
-    public ValueMeta(String ident, ValueType type, Long intValue, Double floatValue) {
+    private ValueMeta(String ident, ValueType type, Long intValue, Double floatValue) {
         this.ident = ident;
         this.type = type;
         this.intValue = intValue;
