@@ -24,8 +24,13 @@ public final class TypeCheck {
         this.symbolTables.push(new HashMap<String,ValueMeta>());
     }
 
-    private void popSymbolTable() {
+    private boolean popSymbolTable() {
+        if (this.symbolTables.size() <= 1) {
+            return false;
+        }
+
         this.symbolTables.pop();
+        return true;
     }
 
     private boolean hasIdent(String ident) {
@@ -485,7 +490,11 @@ public final class TypeCheck {
     }
 
     public boolean checkBlockStmt(BlockStmt blockStmt) {
-        return checkUnitList(blockStmt.block);
+        boolean res = true;
+        pushSymbolTable();
+        res &= checkUnitList(blockStmt.block);
+        res &= popSymbolTable();
+        return res;
     }
 
     public boolean checkIfStmt(IfStmt ifStmt) {
