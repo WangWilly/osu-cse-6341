@@ -152,6 +152,19 @@ public final class TypeCheck {
             }
             */
         }
+        if (expr instanceof UnaryMinusExpr) {
+            UnaryMinusExpr unaryMinusExpr = (UnaryMinusExpr) expr;
+            ValueMeta.ValueType type = getExprType(unaryMinusExpr.expr);
+            if (type == ValueMeta.ValueType.INT || type == ValueMeta.ValueType.FLOAT) {
+                return type;
+            }
+        }
+        if (expr instanceof ReadIntExpr) {
+            return ValueMeta.ValueType.INT;
+        }
+        if (expr instanceof ReadFloatExpr) {
+            return ValueMeta.ValueType.FLOAT;
+        }
 
         return ValueMeta.ValueType.UNDEFINED;
     }
@@ -245,6 +258,22 @@ public final class TypeCheck {
         if (expr instanceof BinaryExpr) {
             BinaryExpr binExpr = (BinaryExpr) expr;
             return getBinaryExprValue(binExpr);
+        }
+        if (expr instanceof UnaryMinusExpr) {
+            UnaryMinusExpr unaryMinusExpr = (UnaryMinusExpr) expr;
+            ValueMeta value = getExprValue(unaryMinusExpr.expr);
+            if (value.getType() == ValueMeta.ValueType.INT) {
+                return new ValueMeta(null, ValueMeta.ValueType.INT, -value.getIntValue());
+            }
+            if (value.getType() == ValueMeta.ValueType.FLOAT) {
+                return new ValueMeta(null, ValueMeta.ValueType.FLOAT, -value.getFloatValue());
+            }
+        }
+        if (expr instanceof ReadIntExpr) {
+            return new ValueMeta(null, ValueMeta.ValueType.INT, Long.valueOf(0));
+        }
+        if (expr instanceof ReadFloatExpr) {
+            return new ValueMeta(null, ValueMeta.ValueType.FLOAT, Double.valueOf(0));
         }
 
         return null;
