@@ -108,7 +108,22 @@ public final class TypeCheck {
     ////////////////////////////////////////////////////////////////////////////
     // Expr (helper)
 
-    public ValueMeta.ValueType getExprType(Expr expr) {
+    private ValueMeta.ValueType getLeftRightExprType(Expr expr1, Expr expr2) {
+        ValueMeta.ValueType left = getExprType(expr1);
+        ValueMeta.ValueType right = getExprType(expr2);
+
+        if (left == ValueMeta.ValueType.UNDEFINED || right == ValueMeta.ValueType.UNDEFINED) {
+            return ValueMeta.ValueType.UNDEFINED;
+        }
+
+        if (left == right) {
+            return left;
+        }
+
+        return ValueMeta.ValueType.UNDEFINED;
+    }
+
+    private ValueMeta.ValueType getExprType(Expr expr) {
         if (expr instanceof IntConstExpr) {
             return ValueMeta.ValueType.INT;
         }
@@ -125,6 +140,8 @@ public final class TypeCheck {
         }
         if (expr instanceof BinaryExpr) {
             BinaryExpr binExpr = (BinaryExpr) expr;
+            return getLeftRightExprType(binExpr.expr1, binExpr.expr2);
+            /**
             ValueMeta.ValueType left = getExprType(binExpr.expr1);
             ValueMeta.ValueType right = getExprType(binExpr.expr2);
             if (left == ValueMeta.ValueType.INT && right == ValueMeta.ValueType.INT) {
@@ -133,12 +150,44 @@ public final class TypeCheck {
             if (left == ValueMeta.ValueType.FLOAT && right == ValueMeta.ValueType.FLOAT) {
                 return ValueMeta.ValueType.FLOAT;
             }
+            */
         }
 
         return ValueMeta.ValueType.UNDEFINED;
     }
 
-    public ValueMeta getBinaryExprValue(BinaryExpr binExpr) {
+    private ValueMeta.ValueType getLeftRightCondExprType(CondExpr expr1, CondExpr expr2) {
+        ValueMeta.ValueType left = getCondExprType(expr1);
+        ValueMeta.ValueType right = getCondExprType(expr2);
+
+        if (left == ValueMeta.ValueType.UNDEFINED || right == ValueMeta.ValueType.UNDEFINED) {
+            return ValueMeta.ValueType.UNDEFINED;
+        }
+
+        if (left == right) {
+            return left;
+        }
+
+        return ValueMeta.ValueType.UNDEFINED;
+    }
+
+    private ValueMeta.ValueType getCondExprType(CondExpr condExpr) {
+        if (condExpr instanceof CompExpr) {
+            CompExpr compExpr = (CompExpr) condExpr;
+            return getLeftRightExprType(compExpr.expr1, compExpr.expr2);
+        }
+        if (condExpr instanceof LogicalExpr) {
+            LogicalExpr logicalExpr = (LogicalExpr) condExpr;
+            if (logicalExpr.op == LogicalExpr.NOT) {
+                return getCondExprType(logicalExpr.expr1);
+            }
+            return getLeftRightCondExprType(logicalExpr.expr1, logicalExpr.expr2);
+        }
+
+        return ValueMeta.ValueType.UNDEFINED;
+    }
+
+    private ValueMeta getBinaryExprValue(BinaryExpr binExpr) {
         ValueMeta left = getExprValue(binExpr.expr1);
         ValueMeta right = getExprValue(binExpr.expr2);
 
@@ -180,7 +229,7 @@ public final class TypeCheck {
         return null;
     }
 
-    public ValueMeta getExprValue(Expr expr) {
+    private ValueMeta getExprValue(Expr expr) {
         if (expr instanceof IntConstExpr) {
             IntConstExpr intConstExpr = (IntConstExpr) expr;
             return new ValueMeta(null, ValueMeta.ValueType.INT, intConstExpr.ival);
@@ -257,6 +306,61 @@ public final class TypeCheck {
         }
 
         return false;
+    }
+
+    private boolean checkCondExpr(CondExpr condExpr) {
+        if (condExpr instanceof CompExpr) {
+            return checkCompExpr((CompExpr) condExpr);
+        }
+        if (condExpr instanceof LogicalExpr) {
+            return checkLogicalExpr((LogicalExpr) condExpr);
+        }
+
+        return false;
+    }
+
+    public boolean checkCompExpr(CompExpr compExpr) {
+        if (compExpr.expr1 == null || compExpr.expr2 == null) {
+            return false;
+        }
+        if (checkExpr(compExpr.expr1) == false || checkExpr(compExpr.expr2) == false) {
+            return false;
+        }
+
+        ValueMeta.ValueType left = getExprType(compExpr.expr1);
+        ValueMeta.ValueType right = getExprType(compExpr.expr2);
+
+        if (left == ValueMeta.ValueType.UNDEFINED || right == ValueMeta.ValueType.UNDEFINED) {
+            return false;
+        }
+        
+        if (left == right) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean checkLogicalExpr(LogicalExpr logicalExpr) {
+        if (logicalExpr.expr1 == null) {
+            return false;
+        }
+        if (logicalExpr.op == LogicalExpr.NOT) {
+            return checkCondExpr(logicalExpr.expr1);
+        }
+        if (logicalExpr.expr2 == null) {
+            return false;
+        }
+        if (checkCondExpr(logicalExpr.expr1) == false || checkCondExpr(logicalExpr.expr2) == false) {
+            return false;
+        }
+
+        ValueMeta.ValueType leftRight = getLeftRightCondExprType(logicalExpr.expr1, logicalExpr.expr2);
+        if (leftRight == ValueMeta.ValueType.UNDEFINED) {
+            return false;
+        }
+
+        return true;
     }
 
     ////////////////////////////////////////////////////////////////////////////

@@ -10,24 +10,30 @@ public class CompExpr extends CondExpr {
     public static final int NE = 6;
     public final Expr expr1, expr2;
     public final int op;
+
     public CompExpr(Expr e1, int oper, Expr e2, Location loc) {
-	super(loc);
-	expr1 = e1; 
-	expr2 = e2;
-	op = oper;
+        super(loc);
+        expr1 = e1; 
+        expr2 = e2;
+        op = oper;
     }
+
     public void print(PrintStream ps) {
-	ps.print("(");
-	expr1.print(ps);
-	switch (op) { 
-	case GE: ps.print(">="); break;
-	case GT: ps.print(">"); break;
-	case LE: ps.print("<="); break;
-	case LT: ps.print("<"); break;
-	case EQ: ps.print("=="); break;
-	case NE: ps.print("!="); break;
-	}
-	expr2.print(ps);
-	ps.print(")");
+        ps.print("(");
+        expr1.print(ps);
+        switch (op) { 
+			case GE: ps.print(">="); break;
+			case GT: ps.print(">"); break;
+			case LE: ps.print("<="); break;
+			case LT: ps.print("<"); break;
+			case EQ: ps.print("=="); break;
+			case NE: ps.print("!="); break;
+        }
+        expr2.print(ps);
+        ps.print(")");
     }
+
+	public boolean checkType(TypeCheck tc) {
+		return tc.checkCompExpr(this);
+	}
 }
