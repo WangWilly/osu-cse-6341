@@ -9,5 +9,5 @@ public abstract class VarDecl extends ASTNode {
         ident = i;
     }
 
-    public abstract void checkType(TypeCheck tc);
+    public abstract boolean checkType(TypeCheck tc);
 }

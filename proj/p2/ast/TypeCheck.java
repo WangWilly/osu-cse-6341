@@ -1,14 +1,56 @@
 package ast;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 public final class TypeCheck {
-    private Map < String, ValueMeta > symbolTable;
+    // private Map < String, ValueMeta > symbolTable;
+    private Stack <Map<String,ValueMeta>> symbolTables;
 
     public TypeCheck() {
-        this.symbolTable = new HashMap < String, ValueMeta > ();
+        // TODO: I think we should have stack of symbol tables for block scope
+        // this.symbolTable = new HashMap < String, ValueMeta > ();
+        this.symbolTables = new Stack <Map<String,ValueMeta>>();
+        // global scope
+        this.symbolTables.push(new HashMap<String,ValueMeta>());
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // SymbolTable (helper)
+
+    private void pushSymbolTable() {
+        this.symbolTables.push(new HashMap<String,ValueMeta>());
+    }
+
+    private void popSymbolTable() {
+        this.symbolTables.pop();
+    }
+
+    private boolean hasIdent(String ident) {
+        for (int i = this.symbolTables.size() - 1; i >= 0; i--) {
+            if (!this.symbolTables.get(i).containsKey(ident)) {
+                continue;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private ValueMeta getValue(String ident) {
+        for (int i = this.symbolTables.size() - 1; i >= 0; i--) {
+            ValueMeta value = this.symbolTables.get(i).get(ident);
+            if (value == null) {
+                continue;
+            }
+            return value;
+        }
+        return null;
+    }
+
+    private void putValue(String ident, ValueMeta value) {
+        this.symbolTables.peek().put(ident, value);
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -64,12 +106,14 @@ public final class TypeCheck {
         // Update
         if (declType == ValueMeta.ValueType.INT) {
             ValueMeta value = getExprValue(decl.expr).copyWithIdent(decl.varDecl.ident);
-            this.symbolTable.put(decl.varDecl.ident, value);
+            // this.symbolTable.put(decl.varDecl.ident, value);
+            putValue(decl.varDecl.ident, value);
             return true;
         }
         if (declType == ValueMeta.ValueType.FLOAT) {
             ValueMeta value = getExprValue(decl.expr).copyWithIdent(decl.varDecl.ident);
-            this.symbolTable.put(decl.varDecl.ident, value);
+            // this.symbolTable.put(decl.varDecl.ident, value);
+            putValue(decl.varDecl.ident, value);
             return true;
         }
 
@@ -90,18 +134,22 @@ public final class TypeCheck {
     }
 
     public boolean checkIntVarDecl(IntVarDecl varDecl) {
-        if (this.symbolTable.containsKey(varDecl.ident)) {
+        // if (this.symbolTable.containsKey(varDecl.ident)) {
+        if (hasIdent(varDecl.ident)) {
             return false;
         }
-        this.symbolTable.put(varDecl.ident, new ValueMeta(varDecl.ident, ValueMeta.ValueType.INT));
+        // this.symbolTable.put(varDecl.ident, new ValueMeta(varDecl.ident, ValueMeta.ValueType.INT));
+        putValue(varDecl.ident, new ValueMeta(varDecl.ident, ValueMeta.ValueType.INT));
         return true;
     }
 
     public boolean checkFloatVarDecl(FloatVarDecl varDecl) {
-        if (this.symbolTable.containsKey(varDecl.ident)) {
+        // if (this.symbolTable.containsKey(varDecl.ident)) {
+        if (hasIdent(varDecl.ident)) {
             return false;
         }
-        this.symbolTable.put(varDecl.ident, new ValueMeta(varDecl.ident, ValueMeta.ValueType.FLOAT));
+        // this.symbolTable.put(varDecl.ident, new ValueMeta(varDecl.ident, ValueMeta.ValueType.FLOAT));
+        putValue(varDecl.ident, new ValueMeta(varDecl.ident, ValueMeta.ValueType.FLOAT));
         return true;
     }
 
@@ -132,7 +180,8 @@ public final class TypeCheck {
         }
         if (expr instanceof IdentExpr) {
             IdentExpr identExpr = (IdentExpr) expr;
-            ValueMeta meta = this.symbolTable.get(identExpr.ident);
+            // ValueMeta meta = this.symbolTable.get(identExpr.ident);
+            ValueMeta meta = getValue(identExpr.ident);
             if (meta == null) {
                 return ValueMeta.ValueType.UNDEFINED;
             }
@@ -253,7 +302,8 @@ public final class TypeCheck {
         }
         if (expr instanceof IdentExpr) {
             IdentExpr identExpr = (IdentExpr) expr;
-            return this.symbolTable.get(identExpr.ident);
+            // return this.symbolTable.get(identExpr.ident);
+            return getValue(identExpr.ident);
         }
         if (expr instanceof BinaryExpr) {
             BinaryExpr binExpr = (BinaryExpr) expr;
@@ -317,7 +367,8 @@ public final class TypeCheck {
     }
 
     public boolean checkIdentExpr(IdentExpr identExpr) {
-        ValueMeta meta = this.symbolTable.get(identExpr.ident);
+        // ValueMeta meta = this.symbolTable.get(identExpr.ident);
+        ValueMeta meta = getValue(identExpr.ident);
         if (meta == null) {
             return false;
         }
@@ -464,7 +515,8 @@ public final class TypeCheck {
 
     public boolean checkAssignStmt(AssignStmt assignStmt) {
         // Validate
-        ValueMeta meta = this.symbolTable.get(assignStmt.ident);
+        // ValueMeta meta = this.symbolTable.get(assignStmt.ident);
+        ValueMeta meta = getValue(assignStmt.ident);
         if (meta == null) {
             return false;
         }
@@ -480,7 +532,8 @@ public final class TypeCheck {
 
         // Update
         ValueMeta value = getExprValue(assignStmt.expr).copyWithIdent(assignStmt.ident);
-        this.symbolTable.put(assignStmt.ident, value);
+        // this.symbolTable.put(assignStmt.ident, value);
+        putValue(assignStmt.ident, value);
 
         return true;
     }
