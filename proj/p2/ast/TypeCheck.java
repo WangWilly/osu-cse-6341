@@ -366,8 +366,39 @@ public final class TypeCheck {
     ////////////////////////////////////////////////////////////////////////////
     // Stmt
 
+    private boolean checkStmt(Stmt stmt) {
+        if (stmt instanceof BlockStmt) {
+            return checkBlockStmt((BlockStmt) stmt);
+        }
+        if (stmt instanceof IfStmt) {
+            return checkIfStmt((IfStmt) stmt);
+        }
+        if (stmt instanceof AssignStmt) {
+            return checkAssignStmt((AssignStmt) stmt);
+        }
+        if (stmt instanceof PrintStmt) {
+            return checkPrintStmt((PrintStmt) stmt);
+        }
+
+        return false;
+    }
+
     public boolean checkBlockStmt(BlockStmt blockStmt) {
         return checkUnitList(blockStmt.block);
+    }
+
+    public boolean checkIfStmt(IfStmt ifStmt) {
+        if (!checkCondExpr(ifStmt.expr)) {
+            return false;
+        }
+        if (!checkStmt(ifStmt.thenstmt)) {
+            return false;
+        }
+        if (ifStmt.elsestmt != null && !checkUnit(ifStmt.elsestmt)) {
+            return false;
+        }
+
+        return true;
     }
 
     public boolean checkAssignStmt(AssignStmt assignStmt) {
