@@ -1,3 +1,3 @@
 int x = readint + 7;
 float y = readfloat + 5. + readfloat;
-if (x>0) { x = x + 1; int z = x + 2; { int p = z + 3; x = p + 4; } z = z + 5; { int q = x + 6; } }
+if (x>0) { x = x + 1; int z = x + 2; { int p = z + 3; x = p + 4; } z = z + 5; { float z = 2.; int q = x + 6; } }

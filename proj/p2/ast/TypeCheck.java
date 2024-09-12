@@ -140,7 +140,7 @@ public final class TypeCheck {
 
     public boolean checkIntVarDecl(IntVarDecl varDecl) {
         // if (this.symbolTable.containsKey(varDecl.ident)) {
-        if (hasIdent(varDecl.ident)) {
+        if (this.symbolTables.peek().containsKey(varDecl.ident)) {
             return false;
         }
         // this.symbolTable.put(varDecl.ident, new ValueMeta(varDecl.ident, ValueMeta.ValueType.INT));
@@ -150,7 +150,7 @@ public final class TypeCheck {
 
     public boolean checkFloatVarDecl(FloatVarDecl varDecl) {
         // if (this.symbolTable.containsKey(varDecl.ident)) {
-        if (hasIdent(varDecl.ident)) {
+        if (this.symbolTables.peek().containsKey(varDecl.ident)) {
             return false;
         }
         // this.symbolTable.put(varDecl.ident, new ValueMeta(varDecl.ident, ValueMeta.ValueType.FLOAT));
