@@ -366,6 +366,10 @@ public final class TypeCheck {
     ////////////////////////////////////////////////////////////////////////////
     // Stmt
 
+    public boolean checkBlockStmt(BlockStmt blockStmt) {
+        return checkUnitList(blockStmt.block);
+    }
+
     public boolean checkAssignStmt(AssignStmt assignStmt) {
         // Validate
         ValueMeta meta = this.symbolTable.get(assignStmt.ident);
@@ -393,4 +397,22 @@ public final class TypeCheck {
         return checkExpr(printStmt.expr);
     }
 
+    ////////////////////////////////////////////////////////////////////////////
+    // Unit
+
+    private boolean checkUnit(Unit unit) {
+        return unit.checkType(this);
+    }
+
+    public boolean checkUnitList(UnitList ul) {
+        if (ul == null) {
+            return true;
+        }
+
+        if (checkUnit(ul.unit) == false) {
+            return false;
+        }
+
+        return checkUnitList(ul.unitList);
+    }
 }
