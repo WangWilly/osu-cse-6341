@@ -7,7 +7,12 @@ public class Program extends ASTNode {
         super(loc);
         unitList = ul;
     }
+
     public void print(PrintStream ps) {
-	unitList.print(ps,"");
+        unitList.print(ps,"");
+    }
+
+    public boolean checkType(TypeCheck tc) {
+        return unitList.checkType(typeCheck);
     }
 }

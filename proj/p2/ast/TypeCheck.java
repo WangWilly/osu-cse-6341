@@ -286,11 +286,15 @@ public final class TypeCheck {
         return true;
     }
 
+    public boolean checkUnaryMinusExpr(UnaryMinusExpr unaryMinusExpr) {
+        return checkExpr(unaryMinusExpr.expr);
+    }
+
     public boolean checkBinExpr(BinaryExpr binExpr) {
         if (binExpr.expr1 == null || binExpr.expr2 == null) {
             return false;
         }
-        if (checkExpr(binExpr.expr1) == false || checkExpr(binExpr.expr2) == false) {
+        if (!checkExpr(binExpr.expr1) || !checkExpr(binExpr.expr2)) {
             return false;
         }
 
@@ -323,7 +327,7 @@ public final class TypeCheck {
         if (compExpr.expr1 == null || compExpr.expr2 == null) {
             return false;
         }
-        if (checkExpr(compExpr.expr1) == false || checkExpr(compExpr.expr2) == false) {
+        if (!checkExpr(compExpr.expr1) || !checkExpr(compExpr.expr2)) {
             return false;
         }
 
@@ -351,7 +355,7 @@ public final class TypeCheck {
         if (logicalExpr.expr2 == null) {
             return false;
         }
-        if (checkCondExpr(logicalExpr.expr1) == false || checkCondExpr(logicalExpr.expr2) == false) {
+        if (!checkCondExpr(logicalExpr.expr1) || !checkCondExpr(logicalExpr.expr2)) {
             return false;
         }
 
@@ -401,6 +405,17 @@ public final class TypeCheck {
         return true;
     }
 
+    public boolean checkWhileStmt(WhileStmt whileStmt) {
+        if (!checkCondExpr(whileStmt.expr)) {
+            return false;
+        }
+        if (!checkStmt(whileStmt.body)) {
+            return false;
+        }
+
+        return true;
+    }
+
     public boolean checkAssignStmt(AssignStmt assignStmt) {
         // Validate
         ValueMeta meta = this.symbolTable.get(assignStmt.ident);
@@ -408,7 +423,7 @@ public final class TypeCheck {
             return false;
         }
 
-        if (checkExpr(assignStmt.expr) == false) {
+        if (!checkExpr(assignStmt.expr)) {
             return false;
         }
 
@@ -440,7 +455,7 @@ public final class TypeCheck {
             return true;
         }
 
-        if (checkUnit(ul.unit) == false) {
+        if (!checkUnit(ul.unit)) {
             return false;
         }
 
