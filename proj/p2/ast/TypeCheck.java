@@ -365,7 +365,7 @@ public final class TypeCheck {
 
     ////////////////////////////////////////////////////////////////////////////
     // Stmt
-    /**
+
     public boolean checkAssignStmt(AssignStmt assignStmt) {
         // Validate
         ValueMeta meta = this.symbolTable.get(assignStmt.ident);
@@ -392,5 +392,5 @@ public final class TypeCheck {
     public boolean checkPrintStmt(PrintStmt printStmt) {
         return checkExpr(printStmt.expr);
     }
-    */
+
 }
