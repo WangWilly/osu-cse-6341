@@ -13,7 +13,7 @@ public final class TypeCheck {
 
     ////////////////////////////////////////////////////////////////////////////
     // Decl (helper)
-    /**
+
     public ValueMeta.ValueType getVarDeclType(VarDecl varDecl) {
         if (varDecl instanceof IntVarDecl) {
             return ValueMeta.ValueType.INT;
@@ -42,10 +42,10 @@ public final class TypeCheck {
 
         return ValueMeta.ValueType.UNDEFINED;
     }
-    */
+
     ////////////////////////////////////////////////////////////////////////////
     // Decl
-    /**
+
     public boolean checkDecl(Decl decl) {
         // Validate
         if (decl.expr == null) {
@@ -75,10 +75,10 @@ public final class TypeCheck {
 
         return false;
     }
-     */
+
     ////////////////////////////////////////////////////////////////////////////
     // VarDecl
-    /**
+
     public boolean checkVarDecl(VarDecl varDecl) {
         if (varDecl instanceof IntVarDecl) {
             return checkIntVarDecl((IntVarDecl) varDecl);
@@ -104,7 +104,7 @@ public final class TypeCheck {
         this.symbolTable.put(varDecl.ident, new ValueMeta(varDecl.ident, ValueMeta.ValueType.FLOAT));
         return true;
     }
-     */
+
     ////////////////////////////////////////////////////////////////////////////
     // Expr (helper)
 
