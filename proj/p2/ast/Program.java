@@ -13,6 +13,6 @@ public class Program extends ASTNode {
     }
 
     public boolean checkType(TypeCheck tc) {
-        return unitList.checkType(typeCheck);
+        return unitList.checkType(tc);
     }
 }

@@ -253,7 +253,7 @@ public final class TypeCheck {
     ////////////////////////////////////////////////////////////////////////////
     // Expr
 
-    public boolean checkExpr(Expr expr) {
+    private boolean checkExpr(Expr expr) {
         if (expr instanceof IntConstExpr) {
             return checkIntConstExpr((IntConstExpr) expr);
         }
@@ -265,6 +265,15 @@ public final class TypeCheck {
         }
         if (expr instanceof BinaryExpr) {
             return checkBinExpr((BinaryExpr) expr);
+        }
+        if (expr instanceof UnaryMinusExpr) {
+            return checkUnaryMinusExpr((UnaryMinusExpr) expr);
+        }
+        if (expr instanceof ReadIntExpr) {
+            return checkReadIntExpr((ReadIntExpr) expr);
+        }
+        if (expr instanceof ReadFloatExpr) {
+            return checkReadFloatExpr((ReadFloatExpr) expr);
         }
 
         return false;
@@ -364,6 +373,14 @@ public final class TypeCheck {
             return false;
         }
 
+        return true;
+    }
+
+    public boolean checkReadIntExpr(ReadIntExpr readIntExpr) {
+        return true;
+    }
+
+    public boolean checkReadFloatExpr(ReadFloatExpr readFloatExpr) {
         return true;
     }
 
