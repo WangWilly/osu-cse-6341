@@ -57,3 +57,21 @@ make
 ```bash
 ./scripts/packHw1.sh
 ```
+
+### 🚩 Project 2
+
+- 📌 [Instructions](https://drive.google.com/file/d/1HC4W7WKcw8b7XV58Ag16YjAdsJV9ujIp/view?usp=sharing)
+- 📌 [Dependent files](https://drive.google.com/drive/folders/1Cqnf5uVXdf0XAzXjrXIoilNs31VMRPrB?usp=sharing)
+- 📌 Test cases
+```bash
+cd proj/p2
+make
+
+./plan t_ #  t1:  success
+./plan s_ #  s1 -> s2:  success
+```
+
+- 📌 Pack it up:
+```bash
+./scripts/packHw2.sh
+```
