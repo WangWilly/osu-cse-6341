@@ -62,13 +62,12 @@ public final class TypeCheck {
         }
 
         // Update
-        if (declType == ValueMeta.ValueType.INT) {
-            ValueMeta value = getExprValue(decl.expr).copyWithIdent(decl.varDecl.ident);
-            this.symbolTable.put(decl.varDecl.ident, value);
-            return true;
-        }
-        if (declType == ValueMeta.ValueType.FLOAT) {
-            ValueMeta value = getExprValue(decl.expr).copyWithIdent(decl.varDecl.ident);
+        if (declType == ValueMeta.ValueType.INT || declType == ValueMeta.ValueType.FLOAT) {
+            ValueMeta referVal = getExprValue(decl.expr);
+            if (referVal == null) {
+                return false;
+            }
+            ValueMeta value = referVal.copyWithIdent(decl.varDecl.ident);
             this.symbolTable.put(decl.varDecl.ident, value);
             return true;
         }
@@ -149,12 +148,20 @@ public final class TypeCheck {
         }
         if (expr instanceof IdentExpr) {
             IdentExpr identExpr = (IdentExpr) expr;
-            return this.symbolTable.get(identExpr.ident);
+            ValueMeta val = this.symbolTable.get(identExpr.ident);
+            if (val.getIntValue() == null && val.getFloatValue() == null) {
+                return null;
+            }
+            return val;
         }
         if (expr instanceof PlusExpr) {
             PlusExpr plusExpr = (PlusExpr) expr;
             ValueMeta left = getExprValue(plusExpr.expr1);
             ValueMeta right = getExprValue(plusExpr.expr2);
+            if (left == null || right == null) {
+                return null;
+            }
+
             if (left.getType() == ValueMeta.ValueType.INT && right.getType() == ValueMeta.ValueType.INT) {
                 return new ValueMeta(null, ValueMeta.ValueType.INT, left.getIntValue() + right.getIntValue());
             }
