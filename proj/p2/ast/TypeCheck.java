@@ -51,6 +51,14 @@ public final class TypeCheck {
         return null;
     }
 
+    private ValueMeta getValidValue(String ident) {
+        ValueMeta refer = getValue(ident);
+        if (refer.getIntValue() == null && refer.getFloatValue() == null) {
+            return null;
+        }
+        return refer;
+    }
+
     private void putValue(String ident, ValueMeta value) {
         this.symbolTables.peek().put(ident, value);
     }
@@ -106,13 +114,12 @@ public final class TypeCheck {
         }
 
         // Update
-        if (declType == ValueMeta.ValueType.INT) {
-            ValueMeta value = getExprValue(decl.expr).copyWithIdent(decl.varDecl.ident);
-            putValue(decl.varDecl.ident, value);
-            return true;
-        }
-        if (declType == ValueMeta.ValueType.FLOAT) {
-            ValueMeta value = getExprValue(decl.expr).copyWithIdent(decl.varDecl.ident);
+        if (declType == ValueMeta.ValueType.INT || declType == ValueMeta.ValueType.FLOAT) {
+            ValueMeta referVal = getExprValue(decl.expr);
+            if (referVal == null) {
+                return false;
+            }
+            ValueMeta value = referVal.copyWithIdent(decl.varDecl.ident);
             putValue(decl.varDecl.ident, value);
             return true;
         }
@@ -237,6 +244,9 @@ public final class TypeCheck {
     private ValueMeta getBinaryExprValue(BinaryExpr binExpr) {
         ValueMeta left = getExprValue(binExpr.expr1);
         ValueMeta right = getExprValue(binExpr.expr2);
+        if (left == null || right == null) {
+            return null;
+        }
 
         switch (binExpr.op) {
             case BinaryExpr.PLUS:
@@ -287,7 +297,11 @@ public final class TypeCheck {
         }
         if (expr instanceof IdentExpr) {
             IdentExpr identExpr = (IdentExpr) expr;
-            return getValue(identExpr.ident);
+            ValueMeta val = this.getValidValue(identExpr.ident);
+            if (val == null) {
+                return null;
+            }
+            return val;
         }
         if (expr instanceof BinaryExpr) {
             BinaryExpr binExpr = (BinaryExpr) expr;
