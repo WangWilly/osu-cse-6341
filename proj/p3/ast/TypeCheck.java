@@ -40,10 +40,9 @@ public final class TypeCheck {
         return false;
     }
 
-    /**
     private ValueMeta getValue(String ident) {
         for (int i = this.symbolTables.size() - 1; i >= 0; i--) {
-            ValueMeta value = this.symbolTables.get(i).get(ident);
+        ValueMeta value = this.symbolTables.get(i).get(ident);
             if (value == null) {
                 continue;
             }
@@ -51,7 +50,8 @@ public final class TypeCheck {
         }
         return null;
     }
-
+                
+    /**
     private ValueMeta getValidValue(String ident) {
         ValueMeta refer = getValue(ident);
         if (refer.getIntValue() == null && refer.getFloatValue() == null) {
@@ -72,8 +72,12 @@ public final class TypeCheck {
         return null;
     }
 
-    private void putValue(String ident, ValueMeta value) {
+    private boolean putValue(String ident, ValueMeta value) {
+        if (getValue(ident) != null) {
+            return false;
+        }
         this.symbolTables.peek().put(ident, value);
+        return true;
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -133,8 +137,7 @@ public final class TypeCheck {
                 return false;
             }
             ValueMeta value = referVal.copyWithIdent(decl.varDecl.ident);
-            putValue(decl.varDecl.ident, value);
-            return true;
+            return putValue(decl.varDecl.ident, value);
         }
 
         return false;
@@ -157,16 +160,14 @@ public final class TypeCheck {
         if (this.symbolTables.peek().containsKey(varDecl.ident)) {
             return false;
         }
-        putValue(varDecl.ident, new ValueMeta(varDecl.ident, ValueMeta.ValueType.INT));
-        return true;
+        return putValue(varDecl.ident, new ValueMeta(varDecl.ident, ValueMeta.ValueType.INT));
     }
 
     public boolean checkFloatVarDecl(FloatVarDecl varDecl) {
         if (this.symbolTables.peek().containsKey(varDecl.ident)) {
             return false;
         }
-        putValue(varDecl.ident, new ValueMeta(varDecl.ident, ValueMeta.ValueType.FLOAT));
-        return true;
+        return putValue(varDecl.ident, new ValueMeta(varDecl.ident, ValueMeta.ValueType.FLOAT));
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -547,7 +548,26 @@ public final class TypeCheck {
     }
 
     public boolean checkPrintStmt(PrintStmt printStmt) {
-        return checkExpr(printStmt.expr);
+        boolean status = checkExpr(printStmt.expr);
+        if (!status) {
+            return false;
+        }
+
+        ValueType type = getExprType(printStmt.expr);
+        switch (type) {
+            case ValueType.INT:
+                System.out.println(getExprValue(printStmt.expr).getIntValue());
+                break;
+
+            case ValueType.FLOAT:
+                System.out.println(getExprValue(printStmt.expr).getFloatValue());
+                break;
+        
+            default:
+                break;
+        }
+
+        return true;
     }
 
     ////////////////////////////////////////////////////////////////////////////
