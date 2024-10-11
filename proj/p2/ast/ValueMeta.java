@@ -2,7 +2,7 @@ package ast;
 
 public final class ValueMeta {
     public enum ValueType {
-        INT, FLOAT, UNDEFINED
+        BOOL, INT, FLOAT, UNDEFINED
     }
 
     private String ident;
@@ -48,6 +48,10 @@ public final class ValueMeta {
 
     public Double getFloatValue() {
         return floatValue;
+    }
+
+    public boolean hasValue() {
+        return intValue != null || floatValue != null;
     }
 
     ////////////////////////////////////////////////////////////////////////////

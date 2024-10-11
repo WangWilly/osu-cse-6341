@@ -45,12 +45,9 @@ make
 - 📌 [Dependent files](https://drive.google.com/drive/folders/1Cqnf5uVXdf0XAzXjrXIoilNs31VMRPrB?usp=sharing)
 - 📌 Test cases
 ```bash
-cd proj/p1
-make
-
-./plan t_ #  t1  -> t5:  success
-./plan s_ #  s1  -> s5:  fail
-./plan s_c # s1c -> s5c: success
+./scripts/execHw1.sh t_ #  t1  -> t5:  success
+./scripts/execHw1.sh s_ #  s1  -> s5:  fail
+./scripts/execHw1.sh s_c # s1c -> s5c: success
 ```
 
 - 📌 Pack it up:
@@ -67,8 +64,8 @@ make
 cd proj/p2
 make
 
-./plan t_ #  t1:  success
-./plan s_ #  s1 -> s2:  success
+./scripts/execHw2.sh t_ #  t1:  success
+./scripts/execHw2.sh s_ #  s1 -> s2:  success
 ```
 
 - 📌 Pack it up:

@@ -40,6 +40,7 @@ public final class TypeCheck {
         return false;
     }
 
+    /**
     private ValueMeta getValue(String ident) {
         for (int i = this.symbolTables.size() - 1; i >= 0; i--) {
             ValueMeta value = this.symbolTables.get(i).get(ident);
@@ -57,6 +58,18 @@ public final class TypeCheck {
             return null;
         }
         return refer;
+    }
+    */
+
+    private ValueMeta findValue(String ident) {
+        for (int i = this.symbolTables.size() - 1; i >= 0; i--) {
+            ValueMeta value = this.symbolTables.get(i).get(ident);
+            if (value == null || !value.hasValue()) {
+                continue;
+            }
+            return value;
+        }
+        return null;
     }
 
     private void putValue(String ident, ValueMeta value) {
@@ -183,7 +196,7 @@ public final class TypeCheck {
         }
         if (expr instanceof IdentExpr) {
             IdentExpr identExpr = (IdentExpr) expr;
-            ValueMeta meta = getValue(identExpr.ident);
+            ValueMeta meta = findValue(identExpr.ident);
             if (meta == null) {
                 return ValueMeta.ValueType.UNDEFINED;
             }
@@ -231,11 +244,7 @@ public final class TypeCheck {
             return getLeftRightExprType(compExpr.expr1, compExpr.expr2);
         }
         if (condExpr instanceof LogicalExpr) {
-            LogicalExpr logicalExpr = (LogicalExpr) condExpr;
-            if (logicalExpr.op == LogicalExpr.NOT) {
-                return getCondExprType(logicalExpr.expr1);
-            }
-            return getLeftRightCondExprType(logicalExpr.expr1, logicalExpr.expr2);
+            return ValueMeta.ValueType.BOOL;
         }
 
         return ValueMeta.ValueType.UNDEFINED;
@@ -297,7 +306,7 @@ public final class TypeCheck {
         }
         if (expr instanceof IdentExpr) {
             IdentExpr identExpr = (IdentExpr) expr;
-            ValueMeta val = this.getValidValue(identExpr.ident);
+            ValueMeta val = findValue(identExpr.ident);
             if (val == null) {
                 return null;
             }
@@ -365,7 +374,7 @@ public final class TypeCheck {
     }
 
     public boolean checkIdentExpr(IdentExpr identExpr) {
-        ValueMeta meta = getValue(identExpr.ident);
+        ValueMeta meta = findValue(identExpr.ident);
         if (meta == null) {
             return false;
         }
@@ -445,10 +454,10 @@ public final class TypeCheck {
             return false;
         }
 
-        ValueMeta.ValueType leftRight = getLeftRightCondExprType(logicalExpr.expr1, logicalExpr.expr2);
-        if (leftRight == ValueMeta.ValueType.UNDEFINED) {
-            return false;
-        }
+        // ValueMeta.ValueType leftRight = getLeftRightCondExprType(logicalExpr.expr1, logicalExpr.expr2);
+        // if (leftRight == ValueMeta.ValueType.UNDEFINED) {
+        //     return false;
+        // }
 
         return true;
     }
@@ -516,7 +525,7 @@ public final class TypeCheck {
 
     public boolean checkAssignStmt(AssignStmt assignStmt) {
         // Validate
-        ValueMeta meta = getValue(assignStmt.ident);
+        ValueMeta meta = findValue(assignStmt.ident);
         if (meta == null) {
             return false;
         }
