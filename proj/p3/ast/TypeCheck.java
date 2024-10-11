@@ -9,8 +9,18 @@ import java.util.Stack;
 ////////////////////////////////////////////////////////////////////////////////
 
 public final class TypeCheck {
-    private Stack <Map<String,ValueMeta>> symbolTables;
-    private Queue <ValueMeta> injectedValues;
+    private Stack<Map<String,ValueMeta>> symbolTables;
+    private Queue<ValueMeta> injectedValues;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Constructor
+
+    public TypeCheck(Queue<ValueMeta> injectedValues) {
+        this.symbolTables = new Stack<Map<String,ValueMeta>>();
+        // global scope
+        this.symbolTables.push(new HashMap<String,ValueMeta>());
+        this.injectedValues = injectedValues;
+    }
 
     public TypeCheck() {
         this.symbolTables = new Stack <Map<String,ValueMeta>>();
@@ -295,9 +305,17 @@ public final class TypeCheck {
                 break;
             case BinaryExpr.DIV:
                 if (left.getType() == ValueMeta.ValueType.INT && right.getType() == ValueMeta.ValueType.INT) {
+                    if (right.getIntValue() == 0) {
+                        // TODO:
+                        return null;
+                    }
                     return new ValueMeta(null, ValueMeta.ValueType.INT, left.getIntValue() / right.getIntValue());
                 }
                 if (left.getType() == ValueMeta.ValueType.FLOAT && right.getType() == ValueMeta.ValueType.FLOAT) {
+                    if (right.getFloatValue() == 0.0) {
+                        // TODO:
+                        return null;
+                    }
                     return new ValueMeta(null, ValueMeta.ValueType.FLOAT, left.getFloatValue() / right.getFloatValue());
                 }
                 break;
@@ -414,6 +432,15 @@ public final class TypeCheck {
 
         if (left == ValueMeta.ValueType.UNDEFINED || right == ValueMeta.ValueType.UNDEFINED) {
             return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+        }
+
+        if (binExpr.op == BinaryExpr.DIV) {
+            if (right == ValueMeta.ValueType.INT && getExprValue(binExpr.expr2).getIntValue() == 0) {
+                return AstErrorHandler.ErrorCode.DIV_BY_ZERO_ERROR;
+            }
+            if (right == ValueMeta.ValueType.FLOAT && getExprValue(binExpr.expr2).getFloatValue() == 0.0) {
+                return AstErrorHandler.ErrorCode.DIV_BY_ZERO_ERROR;
+            }
         }
         
         if (left == right) {
