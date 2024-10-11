@@ -8,10 +8,8 @@ project3_dir="${current_dir}/proj/p3"
 cd $project3_dir
 make
 
-test_files_args=""
-if [ "$#" -eq 1 ]; then
-    test_files_args="$1"
-    ./plan $test_files_args
+if [ "$#" -eq 2 ]; then
+    ./plan $1 < $2
 fi
 
 make clean
