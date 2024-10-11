@@ -54,7 +54,7 @@ public class Interpreter {
 
         // type checking. If the program does not typecheck,
         // call fatalError with return code EXIT_STATIC_CHECKING_ERROR
-        TypeCheck typeCheck = new TypeCheck();
+        TypeCheck typeCheck = new TypeCheck(values);
         AstErrorHandler.ErrorCode code = astRoot.checkType(typeCheck);
         if (!AstErrorHandler.isSuccessful(code)) {
             switch (code) {
