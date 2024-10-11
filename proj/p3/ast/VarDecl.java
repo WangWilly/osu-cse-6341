@@ -9,5 +9,5 @@ public abstract class VarDecl extends ASTNode {
         ident = i;
     }
 
-    public abstract ErrorHandler.ErrorCode checkType(TypeCheck tc);
+    public abstract AstErrorHandler.ErrorCode checkType(TypeCheck tc);
 }

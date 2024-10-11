@@ -1,5 +1,6 @@
 package ast;
-import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
@@ -75,12 +76,12 @@ public final class TypeCheck {
         return null;
     }
 
-    private ErrorHandler.ErrorCode putValue(String ident, ValueMeta value) {
+    private AstErrorHandler.ErrorCode putValue(String ident, ValueMeta value) {
         if (getValue(ident) != null) {
-            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+            return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
         this.symbolTables.peek().put(ident, value);
-        return ErrorHandler.ErrorCode.SUCCESS;
+        return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -118,17 +119,17 @@ public final class TypeCheck {
     ////////////////////////////////////////////////////////////////////////////
     // Decl
 
-    public ErrorHandler.ErrorCode checkDecl(Decl decl) {
+    public AstErrorHandler.ErrorCode checkDecl(Decl decl) {
         // Validate
         if (decl.expr == null) {
             return checkVarDecl(decl.varDecl);
         }
         // if (!(checkVarDecl(decl.varDecl) && checkExpr(decl.expr))) {
-        Function<Void, Integer>[] functions = new Function[2];
-        functions[0] = () -> checkVarDecl(decl.varDecl);
-        functions[1] = () -> checkExpr(decl.expr);
-        ErrorHandler.ErrorCode code = ErrorHandler.handle(functions);
-        if (!ErrorHandler.isSuccessful(code)) {
+        ArrayList<Supplier<AstErrorHandler.ErrorCode>> functions = new ArrayList<Supplier<AstErrorHandler.ErrorCode>>();
+        functions.add(() -> checkVarDecl(decl.varDecl));
+        functions.add(() -> checkExpr(decl.expr));
+        AstErrorHandler.ErrorCode code = AstErrorHandler.handle(functions);
+        if (!AstErrorHandler.isSuccessful(code)) {
             return code;
         }
         
@@ -136,45 +137,45 @@ public final class TypeCheck {
         // Check
         ValueMeta.ValueType declType = getDeclType(decl);
         if (declType == ValueMeta.ValueType.UNDEFINED) {
-            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+            return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
 
         // Update
         if (declType == ValueMeta.ValueType.INT || declType == ValueMeta.ValueType.FLOAT) {
             ValueMeta referVal = getExprValue(decl.expr);
             if (referVal == null) {
-                return ErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR;
+                return AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR;
             }
             ValueMeta value = referVal.copyWithIdent(decl.varDecl.ident);
             return putValue(decl.varDecl.ident, value);
         }
 
-        return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+        return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
     }
 
     ////////////////////////////////////////////////////////////////////////////
     // VarDecl
 
-    public ErrorHandler.ErrorCode checkVarDecl(VarDecl varDecl) {
+    public AstErrorHandler.ErrorCode checkVarDecl(VarDecl varDecl) {
         if (varDecl instanceof IntVarDecl) {
             return checkIntVarDecl((IntVarDecl) varDecl);
         }
         if (varDecl instanceof FloatVarDecl) {
             return checkFloatVarDecl((FloatVarDecl) varDecl);
         }
-        return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+        return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
     }
 
-    public ErrorHandler.ErrorCode checkIntVarDecl(IntVarDecl varDecl) {
+    public AstErrorHandler.ErrorCode checkIntVarDecl(IntVarDecl varDecl) {
         if (this.symbolTables.peek().containsKey(varDecl.ident)) {
-            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+            return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
         return putValue(varDecl.ident, new ValueMeta(varDecl.ident, ValueMeta.ValueType.INT));
     }
 
-    public boolean checkFloatVarDecl(FloatVarDecl varDecl) {
+    public AstErrorHandler.ErrorCode checkFloatVarDecl(FloatVarDecl varDecl) {
         if (this.symbolTables.peek().containsKey(varDecl.ident)) {
-            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+            return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
         return putValue(varDecl.ident, new ValueMeta(varDecl.ident, ValueMeta.ValueType.FLOAT));
     }
@@ -349,7 +350,7 @@ public final class TypeCheck {
     ////////////////////////////////////////////////////////////////////////////
     // Expr
 
-    private ErrorHandler.ErrorCode checkExpr(Expr expr) {
+    private AstErrorHandler.ErrorCode checkExpr(Expr expr) {
         if (expr instanceof IntConstExpr) {
             return checkIntConstExpr((IntConstExpr) expr);
         }
@@ -372,39 +373,39 @@ public final class TypeCheck {
             return checkReadFloatExpr((ReadFloatExpr) expr);
         }
 
-        return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+        return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
     }
 
-    public ErrorHandler.ErrorCode checkIntConstExpr(IntConstExpr intConstExpr) {
-        return ErrorHandler.ErrorCode.SUCCESS;
+    public AstErrorHandler.ErrorCode checkIntConstExpr(IntConstExpr intConstExpr) {
+        return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
-    public ErrorHandler.ErrorCode checkFloatConstExpr(FloatConstExpr floatConstExpr) {
-        return ErrorHandler.ErrorCode.SUCCESS;
+    public AstErrorHandler.ErrorCode checkFloatConstExpr(FloatConstExpr floatConstExpr) {
+        return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
-    public ErrorHandler.ErrorCode checkIdentExpr(IdentExpr identExpr) {
+    public AstErrorHandler.ErrorCode checkIdentExpr(IdentExpr identExpr) {
         ValueMeta meta = findValue(identExpr.ident);
         if (meta == null) {
-            return ErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR;
+            return AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR;
         }
-        return ErrorHandler.ErrorCode.SUCCESS;
+        return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
-    public ErrorHandler.ErrorCode checkUnaryMinusExpr(UnaryMinusExpr unaryMinusExpr) {
+    public AstErrorHandler.ErrorCode checkUnaryMinusExpr(UnaryMinusExpr unaryMinusExpr) {
         return checkExpr(unaryMinusExpr.expr);
     }
 
-    public ErrorHandler.ErrorCode checkBinExpr(BinaryExpr binExpr) {
+    public AstErrorHandler.ErrorCode checkBinExpr(BinaryExpr binExpr) {
         if (binExpr.expr1 == null || binExpr.expr2 == null) {
-            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+            return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
         // if (!checkExpr(binExpr.expr1) || !checkExpr(binExpr.expr2)) {
-        Function<Void, Integer>[] functions = new Function[2];
-        functions[0] = () -> checkExpr(binExpr.expr1);
-        functions[1] = () -> checkExpr(binExpr.expr2);
-        ErrorHandler.ErrorCode code = ErrorHandler.handle(functions);
-        if (!ErrorHandler.isSuccessful(code)) {
+        ArrayList<Supplier<AstErrorHandler.ErrorCode>> functions = new ArrayList<Supplier<AstErrorHandler.ErrorCode>>();
+        functions.add(() -> checkExpr(binExpr.expr1));
+        functions.add(() -> checkExpr(binExpr.expr2));
+        AstErrorHandler.ErrorCode code = AstErrorHandler.handle(functions);
+        if (!AstErrorHandler.isSuccessful(code)) {
             return code;
         }
 
@@ -412,17 +413,17 @@ public final class TypeCheck {
         ValueMeta.ValueType right = getExprType(binExpr.expr2);
 
         if (left == ValueMeta.ValueType.UNDEFINED || right == ValueMeta.ValueType.UNDEFINED) {
-            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+            return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
         
         if (left == right) {
-            return ErrorHandler.ErrorCode.SUCCESS;
+            return AstErrorHandler.ErrorCode.SUCCESS;
         }
 
-        return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+        return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
     }
 
-    private ErrorHandler.ErrorCode checkCondExpr(CondExpr condExpr) {
+    private AstErrorHandler.ErrorCode checkCondExpr(CondExpr condExpr) {
         if (condExpr instanceof CompExpr) {
             return checkCompExpr((CompExpr) condExpr);
         }
@@ -430,19 +431,19 @@ public final class TypeCheck {
             return checkLogicalExpr((LogicalExpr) condExpr);
         }
 
-        return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+        return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
     }
 
-    public ErrorHandler.ErrorCode checkCompExpr(CompExpr compExpr) {
+    public AstErrorHandler.ErrorCode checkCompExpr(CompExpr compExpr) {
         if (compExpr.expr1 == null || compExpr.expr2 == null) {
-            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+            return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
         // if (!checkExpr(compExpr.expr1) || !checkExpr(compExpr.expr2)) {
-        Function<Void, Integer>[] functions = new Function[2];
-        functions[0] = () -> checkExpr(compExpr.expr1);
-        functions[1] = () -> checkExpr(compExpr.expr2);
-        ErrorHandler.ErrorCode code = ErrorHandler.handle(functions);
-        if (!ErrorHandler.isSuccessful(code)) {
+        ArrayList<Supplier<AstErrorHandler.ErrorCode>> functions = new ArrayList<Supplier<AstErrorHandler.ErrorCode>>();
+        functions.add(() -> checkExpr(compExpr.expr1));
+        functions.add(() -> checkExpr(compExpr.expr2));
+        AstErrorHandler.ErrorCode code = AstErrorHandler.handle(functions);
+        if (!AstErrorHandler.isSuccessful(code)) {
             return code;
         }
 
@@ -450,32 +451,32 @@ public final class TypeCheck {
         ValueMeta.ValueType right = getExprType(compExpr.expr2);
 
         if (left == ValueMeta.ValueType.UNDEFINED || right == ValueMeta.ValueType.UNDEFINED) {
-            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+            return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
         
         if (left == right) {
-            return ErrorHandler.ErrorCode.SUCCESS;
+            return AstErrorHandler.ErrorCode.SUCCESS;
         }
 
-        return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+        return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
     }
 
-    public ErrorHandler.ErrorCode checkLogicalExpr(LogicalExpr logicalExpr) {
+    public AstErrorHandler.ErrorCode checkLogicalExpr(LogicalExpr logicalExpr) {
         if (logicalExpr.expr1 == null) {
-            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+            return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
         if (logicalExpr.op == LogicalExpr.NOT) {
             return checkCondExpr(logicalExpr.expr1);
         }
         if (logicalExpr.expr2 == null) {
-            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+            return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
         // if (!checkCondExpr(logicalExpr.expr1) || !checkCondExpr(logicalExpr.expr2)) {
-        Function<Void, Integer>[] functions = new Function[2];
-        functions[0] = () -> checkCondExpr(logicalExpr.expr1);
-        functions[1] = () -> checkCondExpr(logicalExpr.expr2);
-        ErrorHandler.ErrorCode code = ErrorHandler.handle(functions);
-        if (!ErrorHandler.isSuccessful(code)) {
+        ArrayList<Supplier<AstErrorHandler.ErrorCode>> functions = new ArrayList<Supplier<AstErrorHandler.ErrorCode>>();
+        functions.add(() -> checkCondExpr(logicalExpr.expr1));
+        functions.add(() -> checkCondExpr(logicalExpr.expr2));
+        AstErrorHandler.ErrorCode code = AstErrorHandler.handle(functions);
+        if (!AstErrorHandler.isSuccessful(code)) {
             return code;
         }
 
@@ -484,33 +485,33 @@ public final class TypeCheck {
         //     return false;
         // }
 
-        return ErrorHandler.ErrorCode.SUCCESS;
+        return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
-    public ErrorHandler.ErrorCode checkReadIntExpr(ReadIntExpr readIntExpr) {
+    public AstErrorHandler.ErrorCode checkReadIntExpr(ReadIntExpr readIntExpr) {
         if (injectedValues == null || injectedValues.isEmpty()) {
-            return ErrorHandler.ErrorCode.FAILED_STDIN_READ;
+            return AstErrorHandler.ErrorCode.FAILED_STDIN_READ;
         }
         if (injectedValues.peek().getType() != ValueMeta.ValueType.INT) {
-            return ErrorHandler.ErrorCode.FAILED_STDIN_READ;
+            return AstErrorHandler.ErrorCode.FAILED_STDIN_READ;
         }
-        return ErrorHandler.ErrorCode.SUCCESS;
+        return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
-    public ErrorHandler.ErrorCode checkReadFloatExpr(ReadFloatExpr readFloatExpr) {
+    public AstErrorHandler.ErrorCode checkReadFloatExpr(ReadFloatExpr readFloatExpr) {
         if (injectedValues == null || injectedValues.isEmpty()) {
-            return ErrorHandler.ErrorCode.FAILED_STDIN_READ;
+            return AstErrorHandler.ErrorCode.FAILED_STDIN_READ;
         }
         if (injectedValues.peek().getType() != ValueMeta.ValueType.FLOAT) {
-            return ErrorHandler.ErrorCode.FAILED_STDIN_READ;
+            return AstErrorHandler.ErrorCode.FAILED_STDIN_READ;
         }
-        return ErrorHandler.ErrorCode.SUCCESS;
+        return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
     ////////////////////////////////////////////////////////////////////////////
     // Stmt
 
-    private ErrorHandler.ErrorCode checkStmt(Stmt stmt) {
+    private AstErrorHandler.ErrorCode checkStmt(Stmt stmt) {
         if (stmt instanceof BlockStmt) {
             return checkBlockStmt((BlockStmt) stmt);
         }
@@ -524,113 +525,113 @@ public final class TypeCheck {
             return checkPrintStmt((PrintStmt) stmt);
         }
 
-        return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+        return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
     }
 
-    public ErrorHandler.ErrorCode checkBlockStmt(BlockStmt blockStmt) {
+    public AstErrorHandler.ErrorCode checkBlockStmt(BlockStmt blockStmt) {
         pushSymbolTable();
-        ErrorHandler.ErrorCode code = checkUnitList(blockStmt.block);
-        return popSymbolTable() ? code : ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+        AstErrorHandler.ErrorCode code = checkUnitList(blockStmt.block);
+        return popSymbolTable() ? code : AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
     }
 
-    public ErrorHandler.ErrorCode checkIfStmt(IfStmt ifStmt) {
-        ErrorHandler.ErrorCode code = checkCondExpr(ifStmt.expr);
-        if (!ErrorHandler.isSuccessful(code)) {
+    public AstErrorHandler.ErrorCode checkIfStmt(IfStmt ifStmt) {
+        AstErrorHandler.ErrorCode code = checkCondExpr(ifStmt.expr);
+        if (!AstErrorHandler.isSuccessful(code)) {
             return code;
         }
         code = checkStmt(ifStmt.thenstmt);
-        if (!ErrorHandler.isSuccessful(code)) {
+        if (!AstErrorHandler.isSuccessful(code)) {
             return code;
         }
         if (ifStmt.elsestmt != null) {
             code = checkStmt(ifStmt.elsestmt);
-            if (!ErrorHandler.isSuccessful(code)) {
+            if (!AstErrorHandler.isSuccessful(code)) {
                 return code;
             }
         }
 
-        return ErrorHandler.ErrorCode.SUCCESS;
+        return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
-    public ErrorHandler.ErrorCode checkWhileStmt(WhileStmt whileStmt) {
+    public AstErrorHandler.ErrorCode checkWhileStmt(WhileStmt whileStmt) {
         // if (!checkCondExpr(whileStmt.expr)) {
-        ErrorHandler.ErrorCode code = checkCondExpr(whileStmt.expr);
-        if (!ErrorHandler.isSuccessful(code)) {
+        AstErrorHandler.ErrorCode code = checkCondExpr(whileStmt.expr);
+        if (!AstErrorHandler.isSuccessful(code)) {
             return code;
         }
         // if (!checkStmt(whileStmt.body)) {
         code = checkStmt(whileStmt.body);
-        if (!ErrorHandler.isSuccessful(code)) {
+        if (!AstErrorHandler.isSuccessful(code)) {
             return code;
         }
 
-        return ErrorHandler.ErrorCode.SUCCESS;
+        return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
-    public ErrorHandler.ErrorCode checkAssignStmt(AssignStmt assignStmt) {
+    public AstErrorHandler.ErrorCode checkAssignStmt(AssignStmt assignStmt) {
         // Validate
         ValueMeta meta = findValue(assignStmt.ident);
         if (meta == null) {
-            return ErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR;
+            return AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR;
         }
 
         // if (!checkExpr(assignStmt.expr)) {
-        ErrorHandler.ErrorCode code = checkExpr(assignStmt.expr);
-        if (!ErrorHandler.isSuccessful(code)) {
+        AstErrorHandler.ErrorCode code = checkExpr(assignStmt.expr);
+        if (!AstErrorHandler.isSuccessful(code)) {
             return code;
         }
 
         ValueMeta.ValueType exprType = getExprType(assignStmt.expr);
         if (meta.getType() != exprType) {
-            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+            return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
 
         // Update
         ValueMeta value = getExprValue(assignStmt.expr).copyWithIdent(assignStmt.ident);
         putValue(assignStmt.ident, value);
 
-        return ErrorHandler.ErrorCode.SUCCESS;
+        return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
-    public ErrorHandler.ErrorCode checkPrintStmt(PrintStmt printStmt) {
+    public AstErrorHandler.ErrorCode checkPrintStmt(PrintStmt printStmt) {
         // boolean status = checkExpr(printStmt.expr);
-        ErrorHandler.ErrorCode code = checkExpr(printStmt.expr);
-        if (!ErrorHandler.isSuccessful(code)) {
+        AstErrorHandler.ErrorCode code = checkExpr(printStmt.expr);
+        if (!AstErrorHandler.isSuccessful(code)) {
             return code;
         }
 
-        ValueType type = getExprType(printStmt.expr);
+        ValueMeta.ValueType type = getExprType(printStmt.expr);
         switch (type) {
-            case ValueType.INT:
+            case ValueMeta.ValueType.INT:
                 System.out.println(getExprValue(printStmt.expr).getIntValue());
                 break;
 
-            case ValueType.FLOAT:
+            case ValueMeta.ValueType.FLOAT:
                 System.out.println(getExprValue(printStmt.expr).getFloatValue());
                 break;
         
             default:
-                return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+                return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
 
-        return ErrorHandler.ErrorCode.SUCCESS;
+        return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
     ////////////////////////////////////////////////////////////////////////////
     // Unit
 
-    private ErrorHandler.ErrorCode checkUnit(Unit unit) {
+    private AstErrorHandler.ErrorCode checkUnit(Unit unit) {
         return unit.checkType(this);
     }
 
-    public ErrorHandler.ErrorCode checkUnitList(UnitList ul) {
+    public AstErrorHandler.ErrorCode checkUnitList(UnitList ul) {
         if (ul == null) {
-            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+            return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
 
         // if (!checkUnit(ul.unit)) {
-        ErrorHandler.ErrorCode code = checkUnit(ul.unit);
-        if (!ErrorHandler.isSuccessful(code)) {
+        AstErrorHandler.ErrorCode code = checkUnit(ul.unit);
+        if (!AstErrorHandler.isSuccessful(code)) {
             return code;
         }
 

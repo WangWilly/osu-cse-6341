@@ -29,7 +29,7 @@ public class BinaryExpr extends Expr {
         ps.print(")");
     }
 
-    public ErrorHandler.ErrorCode checkType(TypeCheck tc) {
+    public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkBinExpr(this);
     }
 }

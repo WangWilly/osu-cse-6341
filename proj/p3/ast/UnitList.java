@@ -28,7 +28,7 @@ public class UnitList extends ASTNode {
         print(ps,""); 
     }
 
-    public ErrorHandler.ErrorCode checkType(TypeCheck tc) {
+    public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkUnitList(this);
     }
 }

@@ -16,5 +16,5 @@ abstract class ASTNode {
         return new String(b.toByteArray(),java.nio.charset.StandardCharsets.UTF_8);
     }
 
-    // public abstract ErrorHandler.ErrorCode checkType(TypeCheck tc);
+    // public abstract AstErrorHandler.ErrorCode checkType(TypeCheck tc);
 }

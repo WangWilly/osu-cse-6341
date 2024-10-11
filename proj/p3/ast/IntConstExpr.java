@@ -13,7 +13,7 @@ public class IntConstExpr extends Expr {
         ps.print(ival);
     }
 
-    public ErrorHandler.ErrorCode checkType(TypeCheck tc) {
+    public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkIntConstExpr(this);
     }
 }

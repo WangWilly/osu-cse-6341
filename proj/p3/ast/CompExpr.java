@@ -33,7 +33,7 @@ public class CompExpr extends CondExpr {
         ps.print(")");
     }
 
-	public ErrorHandler.ErrorCode checkType(TypeCheck tc) {
+	public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
 		return tc.checkCompExpr(this);
 	}
 }

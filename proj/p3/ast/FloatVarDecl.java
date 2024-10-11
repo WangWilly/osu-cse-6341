@@ -10,7 +10,7 @@ public class FloatVarDecl extends VarDecl {
         ps.print("float " + ident);
     }
 
-    public ErrorHandler.ErrorCode checkType(TypeCheck tc) {
+    public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkFloatVarDecl(this);
     }
 }

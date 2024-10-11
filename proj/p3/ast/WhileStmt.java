@@ -22,7 +22,7 @@ public class WhileStmt extends Stmt {
         print(ps,"");
     }
 
-    public ErrorHandler.ErrorCode checkType(TypeCheck tc) {
+    public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkWhileStmt(this);
     }
 }

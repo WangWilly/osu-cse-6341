@@ -10,7 +10,7 @@ public class FloatConstExpr extends Expr {
     public void print(PrintStream ps) {
         ps.print(fval);
     }
-    public ErrorHandler.ErrorCode checkType(TypeCheck tc) {
+    public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkFloatConstExpr(this);
     }
 }

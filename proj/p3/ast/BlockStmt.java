@@ -19,7 +19,7 @@ public class BlockStmt extends Stmt {
         print(ps,"");
     }
 
-    public ErrorHandler.ErrorCode checkType(TypeCheck tc) {
+    public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkBlockStmt(this);
     }
 }

@@ -1,7 +1,8 @@
-import java.util.function.Function;
-import java.util.Arrays;
+package ast;
+import java.util.function.Supplier;
+import java.util.ArrayList;
 
-public final class ErrorHandler {
+public final class AstErrorHandler {
     public enum ErrorCode {
         SUCCESS,
         STATIC_CHECKING_ERROR,
@@ -10,9 +11,9 @@ public final class ErrorHandler {
         FAILED_STDIN_READ
     }
 
-    public static ErrorCode handle(Function<Void, ErrorCode>[] fns) {
-        for (Function<Void, ErrorCode> fn : fns) {
-            ErrorCode code = fn.apply(null);
+    public static ErrorCode handle(ArrayList<Supplier<ErrorCode>> fns) {
+        for (Supplier<ErrorCode> fn : fns) {
+            ErrorCode code = fn.get();
             if (code != ErrorCode.SUCCESS) {
                 return code;
             }

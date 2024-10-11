@@ -36,7 +36,7 @@ public class LogicalExpr extends CondExpr {
         ps.print(")");
     }
 
-    public ErrorHandler.ErrorCode checkType(TypeCheck tc) {
+    public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkLogicalExpr(this);
     }
 }
