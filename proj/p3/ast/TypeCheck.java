@@ -87,9 +87,9 @@ public final class TypeCheck {
     }
 
     private AstErrorHandler.ErrorCode putValue(String ident, ValueMeta value) {
-        if (getValue(ident) != null) {
-            return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
-        }
+        // if (getValue(ident) != null) {
+        //     return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+        // }
         this.symbolTables.peek().put(ident, value);
         return AstErrorHandler.ErrorCode.SUCCESS;
     }
@@ -653,7 +653,7 @@ public final class TypeCheck {
 
     public AstErrorHandler.ErrorCode checkUnitList(UnitList ul) {
         if (ul == null) {
-            return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+            return AstErrorHandler.ErrorCode.SUCCESS;
         }
 
         // if (!checkUnit(ul.unit)) {
