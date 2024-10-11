@@ -5,6 +5,9 @@ proj/p1/parser/*.class
 proj/p2/ast/*.class
 proj/p2/interpreter/*.class
 proj/p2/parser/*.class
+proj/p3/ast/*.class
+proj/p3/interpreter/*.class
+proj/p3/parser/*.class
 
 # make output
 proj/p1/parser/Lexer.java

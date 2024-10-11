@@ -6,5 +6,5 @@ public abstract class Expr extends ASTNode {
         super(loc);
     }
 
-    public abstract boolean checkType(TypeCheck tc);
+    public abstract ErrorHandler.ErrorCode checkType(TypeCheck tc);
 }

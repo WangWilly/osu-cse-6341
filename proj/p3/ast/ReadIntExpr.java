@@ -10,7 +10,7 @@ public class ReadIntExpr extends Expr {
         ps.print("readint");
     }
 
-    public boolean checkType(TypeCheck tc) {
+    public ErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkReadIntExpr(this);
     }
 }

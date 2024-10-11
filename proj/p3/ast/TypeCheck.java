@@ -1,12 +1,15 @@
 package ast;
+import java.util.function.Function;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Stack;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 public final class TypeCheck {
     private Stack <Map<String,ValueMeta>> symbolTables;
+    private Queue <ValueMeta> injectedValues;
 
     public TypeCheck() {
         this.symbolTables = new Stack <Map<String,ValueMeta>>();
@@ -72,12 +75,12 @@ public final class TypeCheck {
         return null;
     }
 
-    private boolean putValue(String ident, ValueMeta value) {
+    private ErrorHandler.ErrorCode putValue(String ident, ValueMeta value) {
         if (getValue(ident) != null) {
-            return false;
+            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
         this.symbolTables.peek().put(ident, value);
-        return true;
+        return ErrorHandler.ErrorCode.SUCCESS;
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -115,57 +118,63 @@ public final class TypeCheck {
     ////////////////////////////////////////////////////////////////////////////
     // Decl
 
-    public boolean checkDecl(Decl decl) {
+    public ErrorHandler.ErrorCode checkDecl(Decl decl) {
         // Validate
         if (decl.expr == null) {
             return checkVarDecl(decl.varDecl);
         }
-        if (!(checkVarDecl(decl.varDecl) && checkExpr(decl.expr))) {
-            return false;
+        // if (!(checkVarDecl(decl.varDecl) && checkExpr(decl.expr))) {
+        Function<Void, Integer>[] functions = new Function[2];
+        functions[0] = () -> checkVarDecl(decl.varDecl);
+        functions[1] = () -> checkExpr(decl.expr);
+        ErrorHandler.ErrorCode code = ErrorHandler.handle(functions);
+        if (!ErrorHandler.isSuccessful(code)) {
+            return code;
         }
+        
 
         // Check
         ValueMeta.ValueType declType = getDeclType(decl);
         if (declType == ValueMeta.ValueType.UNDEFINED) {
-            return false;
+            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
 
         // Update
         if (declType == ValueMeta.ValueType.INT || declType == ValueMeta.ValueType.FLOAT) {
             ValueMeta referVal = getExprValue(decl.expr);
             if (referVal == null) {
-                return false;
+                return ErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR;
             }
             ValueMeta value = referVal.copyWithIdent(decl.varDecl.ident);
             return putValue(decl.varDecl.ident, value);
         }
 
-        return false;
+        return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
     }
 
     ////////////////////////////////////////////////////////////////////////////
     // VarDecl
 
-    public boolean checkVarDecl(VarDecl varDecl) {
+    public ErrorHandler.ErrorCode checkVarDecl(VarDecl varDecl) {
         if (varDecl instanceof IntVarDecl) {
             return checkIntVarDecl((IntVarDecl) varDecl);
         }
         if (varDecl instanceof FloatVarDecl) {
             return checkFloatVarDecl((FloatVarDecl) varDecl);
         }
-        return false;
+        return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
     }
 
-    public boolean checkIntVarDecl(IntVarDecl varDecl) {
+    public ErrorHandler.ErrorCode checkIntVarDecl(IntVarDecl varDecl) {
         if (this.symbolTables.peek().containsKey(varDecl.ident)) {
-            return false;
+            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
         return putValue(varDecl.ident, new ValueMeta(varDecl.ident, ValueMeta.ValueType.INT));
     }
 
     public boolean checkFloatVarDecl(FloatVarDecl varDecl) {
         if (this.symbolTables.peek().containsKey(varDecl.ident)) {
-            return false;
+            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
         return putValue(varDecl.ident, new ValueMeta(varDecl.ident, ValueMeta.ValueType.FLOAT));
     }
@@ -328,10 +337,10 @@ public final class TypeCheck {
             }
         }
         if (expr instanceof ReadIntExpr) {
-            return new ValueMeta(null, ValueMeta.ValueType.INT, Long.valueOf(0));
+            return injectedValues.poll();
         }
         if (expr instanceof ReadFloatExpr) {
-            return new ValueMeta(null, ValueMeta.ValueType.FLOAT, Double.valueOf(0));
+            return injectedValues.poll();
         }
 
         return null;
@@ -340,7 +349,7 @@ public final class TypeCheck {
     ////////////////////////////////////////////////////////////////////////////
     // Expr
 
-    private boolean checkExpr(Expr expr) {
+    private ErrorHandler.ErrorCode checkExpr(Expr expr) {
         if (expr instanceof IntConstExpr) {
             return checkIntConstExpr((IntConstExpr) expr);
         }
@@ -363,52 +372,57 @@ public final class TypeCheck {
             return checkReadFloatExpr((ReadFloatExpr) expr);
         }
 
-        return false;
+        return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
     }
 
-    public boolean checkIntConstExpr(IntConstExpr intConstExpr) {
-        return true;
+    public ErrorHandler.ErrorCode checkIntConstExpr(IntConstExpr intConstExpr) {
+        return ErrorHandler.ErrorCode.SUCCESS;
     }
 
-    public boolean checkFloatConstExpr(FloatConstExpr floatConstExpr) {
-        return true;
+    public ErrorHandler.ErrorCode checkFloatConstExpr(FloatConstExpr floatConstExpr) {
+        return ErrorHandler.ErrorCode.SUCCESS;
     }
 
-    public boolean checkIdentExpr(IdentExpr identExpr) {
+    public ErrorHandler.ErrorCode checkIdentExpr(IdentExpr identExpr) {
         ValueMeta meta = findValue(identExpr.ident);
         if (meta == null) {
-            return false;
+            return ErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR;
         }
-        return true;
+        return ErrorHandler.ErrorCode.SUCCESS;
     }
 
-    public boolean checkUnaryMinusExpr(UnaryMinusExpr unaryMinusExpr) {
+    public ErrorHandler.ErrorCode checkUnaryMinusExpr(UnaryMinusExpr unaryMinusExpr) {
         return checkExpr(unaryMinusExpr.expr);
     }
 
-    public boolean checkBinExpr(BinaryExpr binExpr) {
+    public ErrorHandler.ErrorCode checkBinExpr(BinaryExpr binExpr) {
         if (binExpr.expr1 == null || binExpr.expr2 == null) {
-            return false;
+            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
-        if (!checkExpr(binExpr.expr1) || !checkExpr(binExpr.expr2)) {
-            return false;
+        // if (!checkExpr(binExpr.expr1) || !checkExpr(binExpr.expr2)) {
+        Function<Void, Integer>[] functions = new Function[2];
+        functions[0] = () -> checkExpr(binExpr.expr1);
+        functions[1] = () -> checkExpr(binExpr.expr2);
+        ErrorHandler.ErrorCode code = ErrorHandler.handle(functions);
+        if (!ErrorHandler.isSuccessful(code)) {
+            return code;
         }
 
         ValueMeta.ValueType left = getExprType(binExpr.expr1);
         ValueMeta.ValueType right = getExprType(binExpr.expr2);
 
         if (left == ValueMeta.ValueType.UNDEFINED || right == ValueMeta.ValueType.UNDEFINED) {
-            return false;
+            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
         
         if (left == right) {
-            return true;
+            return ErrorHandler.ErrorCode.SUCCESS;
         }
 
-        return false;
+        return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
     }
 
-    private boolean checkCondExpr(CondExpr condExpr) {
+    private ErrorHandler.ErrorCode checkCondExpr(CondExpr condExpr) {
         if (condExpr instanceof CompExpr) {
             return checkCompExpr((CompExpr) condExpr);
         }
@@ -416,43 +430,53 @@ public final class TypeCheck {
             return checkLogicalExpr((LogicalExpr) condExpr);
         }
 
-        return false;
+        return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
     }
 
-    public boolean checkCompExpr(CompExpr compExpr) {
+    public ErrorHandler.ErrorCode checkCompExpr(CompExpr compExpr) {
         if (compExpr.expr1 == null || compExpr.expr2 == null) {
-            return false;
+            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
-        if (!checkExpr(compExpr.expr1) || !checkExpr(compExpr.expr2)) {
-            return false;
+        // if (!checkExpr(compExpr.expr1) || !checkExpr(compExpr.expr2)) {
+        Function<Void, Integer>[] functions = new Function[2];
+        functions[0] = () -> checkExpr(compExpr.expr1);
+        functions[1] = () -> checkExpr(compExpr.expr2);
+        ErrorHandler.ErrorCode code = ErrorHandler.handle(functions);
+        if (!ErrorHandler.isSuccessful(code)) {
+            return code;
         }
 
         ValueMeta.ValueType left = getExprType(compExpr.expr1);
         ValueMeta.ValueType right = getExprType(compExpr.expr2);
 
         if (left == ValueMeta.ValueType.UNDEFINED || right == ValueMeta.ValueType.UNDEFINED) {
-            return false;
+            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
         
         if (left == right) {
-            return true;
+            return ErrorHandler.ErrorCode.SUCCESS;
         }
 
-        return false;
+        return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
     }
 
-    public boolean checkLogicalExpr(LogicalExpr logicalExpr) {
+    public ErrorHandler.ErrorCode checkLogicalExpr(LogicalExpr logicalExpr) {
         if (logicalExpr.expr1 == null) {
-            return false;
+            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
         if (logicalExpr.op == LogicalExpr.NOT) {
             return checkCondExpr(logicalExpr.expr1);
         }
         if (logicalExpr.expr2 == null) {
-            return false;
+            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
-        if (!checkCondExpr(logicalExpr.expr1) || !checkCondExpr(logicalExpr.expr2)) {
-            return false;
+        // if (!checkCondExpr(logicalExpr.expr1) || !checkCondExpr(logicalExpr.expr2)) {
+        Function<Void, Integer>[] functions = new Function[2];
+        functions[0] = () -> checkCondExpr(logicalExpr.expr1);
+        functions[1] = () -> checkCondExpr(logicalExpr.expr2);
+        ErrorHandler.ErrorCode code = ErrorHandler.handle(functions);
+        if (!ErrorHandler.isSuccessful(code)) {
+            return code;
         }
 
         // ValueMeta.ValueType leftRight = getLeftRightCondExprType(logicalExpr.expr1, logicalExpr.expr2);
@@ -460,21 +484,33 @@ public final class TypeCheck {
         //     return false;
         // }
 
-        return true;
+        return ErrorHandler.ErrorCode.SUCCESS;
     }
 
-    public boolean checkReadIntExpr(ReadIntExpr readIntExpr) {
-        return true;
+    public ErrorHandler.ErrorCode checkReadIntExpr(ReadIntExpr readIntExpr) {
+        if (injectedValues == null || injectedValues.isEmpty()) {
+            return ErrorHandler.ErrorCode.FAILED_STDIN_READ;
+        }
+        if (injectedValues.peek().getType() != ValueMeta.ValueType.INT) {
+            return ErrorHandler.ErrorCode.FAILED_STDIN_READ;
+        }
+        return ErrorHandler.ErrorCode.SUCCESS;
     }
 
-    public boolean checkReadFloatExpr(ReadFloatExpr readFloatExpr) {
-        return true;
+    public ErrorHandler.ErrorCode checkReadFloatExpr(ReadFloatExpr readFloatExpr) {
+        if (injectedValues == null || injectedValues.isEmpty()) {
+            return ErrorHandler.ErrorCode.FAILED_STDIN_READ;
+        }
+        if (injectedValues.peek().getType() != ValueMeta.ValueType.FLOAT) {
+            return ErrorHandler.ErrorCode.FAILED_STDIN_READ;
+        }
+        return ErrorHandler.ErrorCode.SUCCESS;
     }
 
     ////////////////////////////////////////////////////////////////////////////
     // Stmt
 
-    private boolean checkStmt(Stmt stmt) {
+    private ErrorHandler.ErrorCode checkStmt(Stmt stmt) {
         if (stmt instanceof BlockStmt) {
             return checkBlockStmt((BlockStmt) stmt);
         }
@@ -488,69 +524,79 @@ public final class TypeCheck {
             return checkPrintStmt((PrintStmt) stmt);
         }
 
-        return false;
+        return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
     }
 
-    public boolean checkBlockStmt(BlockStmt blockStmt) {
-        boolean res = true;
+    public ErrorHandler.ErrorCode checkBlockStmt(BlockStmt blockStmt) {
         pushSymbolTable();
-        res &= checkUnitList(blockStmt.block);
-        res &= popSymbolTable();
-        return res;
+        ErrorHandler.ErrorCode code = checkUnitList(blockStmt.block);
+        return popSymbolTable() ? code : ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
     }
 
-    public boolean checkIfStmt(IfStmt ifStmt) {
-        if (!checkCondExpr(ifStmt.expr)) {
-            return false;
+    public ErrorHandler.ErrorCode checkIfStmt(IfStmt ifStmt) {
+        ErrorHandler.ErrorCode code = checkCondExpr(ifStmt.expr);
+        if (!ErrorHandler.isSuccessful(code)) {
+            return code;
         }
-        if (!checkStmt(ifStmt.thenstmt)) {
-            return false;
+        code = checkStmt(ifStmt.thenstmt);
+        if (!ErrorHandler.isSuccessful(code)) {
+            return code;
         }
-        if (ifStmt.elsestmt != null && !checkUnit(ifStmt.elsestmt)) {
-            return false;
+        if (ifStmt.elsestmt != null) {
+            code = checkStmt(ifStmt.elsestmt);
+            if (!ErrorHandler.isSuccessful(code)) {
+                return code;
+            }
         }
 
-        return true;
+        return ErrorHandler.ErrorCode.SUCCESS;
     }
 
-    public boolean checkWhileStmt(WhileStmt whileStmt) {
-        if (!checkCondExpr(whileStmt.expr)) {
-            return false;
+    public ErrorHandler.ErrorCode checkWhileStmt(WhileStmt whileStmt) {
+        // if (!checkCondExpr(whileStmt.expr)) {
+        ErrorHandler.ErrorCode code = checkCondExpr(whileStmt.expr);
+        if (!ErrorHandler.isSuccessful(code)) {
+            return code;
         }
-        if (!checkStmt(whileStmt.body)) {
-            return false;
+        // if (!checkStmt(whileStmt.body)) {
+        code = checkStmt(whileStmt.body);
+        if (!ErrorHandler.isSuccessful(code)) {
+            return code;
         }
 
-        return true;
+        return ErrorHandler.ErrorCode.SUCCESS;
     }
 
-    public boolean checkAssignStmt(AssignStmt assignStmt) {
+    public ErrorHandler.ErrorCode checkAssignStmt(AssignStmt assignStmt) {
         // Validate
         ValueMeta meta = findValue(assignStmt.ident);
         if (meta == null) {
-            return false;
+            return ErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR;
         }
 
-        if (!checkExpr(assignStmt.expr)) {
-            return false;
+        // if (!checkExpr(assignStmt.expr)) {
+        ErrorHandler.ErrorCode code = checkExpr(assignStmt.expr);
+        if (!ErrorHandler.isSuccessful(code)) {
+            return code;
         }
 
         ValueMeta.ValueType exprType = getExprType(assignStmt.expr);
         if (meta.getType() != exprType) {
-            return false;
+            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
 
         // Update
         ValueMeta value = getExprValue(assignStmt.expr).copyWithIdent(assignStmt.ident);
         putValue(assignStmt.ident, value);
 
-        return true;
+        return ErrorHandler.ErrorCode.SUCCESS;
     }
 
-    public boolean checkPrintStmt(PrintStmt printStmt) {
-        boolean status = checkExpr(printStmt.expr);
-        if (!status) {
-            return false;
+    public ErrorHandler.ErrorCode checkPrintStmt(PrintStmt printStmt) {
+        // boolean status = checkExpr(printStmt.expr);
+        ErrorHandler.ErrorCode code = checkExpr(printStmt.expr);
+        if (!ErrorHandler.isSuccessful(code)) {
+            return code;
         }
 
         ValueType type = getExprType(printStmt.expr);
@@ -564,26 +610,28 @@ public final class TypeCheck {
                 break;
         
             default:
-                break;
+                return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
 
-        return true;
+        return ErrorHandler.ErrorCode.SUCCESS;
     }
 
     ////////////////////////////////////////////////////////////////////////////
     // Unit
 
-    private boolean checkUnit(Unit unit) {
+    private ErrorHandler.ErrorCode checkUnit(Unit unit) {
         return unit.checkType(this);
     }
 
-    public boolean checkUnitList(UnitList ul) {
+    public ErrorHandler.ErrorCode checkUnitList(UnitList ul) {
         if (ul == null) {
-            return true;
+            return ErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
 
-        if (!checkUnit(ul.unit)) {
-            return false;
+        // if (!checkUnit(ul.unit)) {
+        ErrorHandler.ErrorCode code = checkUnit(ul.unit);
+        if (!ErrorHandler.isSuccessful(code)) {
+            return code;
         }
 
         return checkUnitList(ul.unitList);

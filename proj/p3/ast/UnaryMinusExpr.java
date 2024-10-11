@@ -15,7 +15,7 @@ public class UnaryMinusExpr extends Expr {
         ps.print(")");
     }
 
-    public boolean checkType(TypeCheck tc) {
+    public ErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkUnaryMinusExpr(this);
     }
 }

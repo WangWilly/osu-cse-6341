@@ -13,7 +13,7 @@ public class IdentExpr extends Expr {
         ps.print(ident);
     }
 
-    public boolean checkType(TypeCheck tc) {
+    public ErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkIdentExpr(this);
     }
 }

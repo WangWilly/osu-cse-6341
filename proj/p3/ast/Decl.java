@@ -31,7 +31,7 @@ public class Decl extends Unit {
         print(ps,"");
     }
 
-	public boolean checkType(TypeCheck tc) {
+	public ErrorHandler.ErrorCode checkType(TypeCheck tc) {
 		return tc.checkDecl(this);
 	}
 }

@@ -10,7 +10,7 @@ public class ReadFloatExpr extends Expr {
         ps.print("readfloat");
     }
 
-    public boolean checkType(TypeCheck tc) {
+    public ErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkReadFloatExpr(this);
     }
 }

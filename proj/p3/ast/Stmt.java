@@ -6,5 +6,5 @@ public abstract class Stmt extends Unit {
         super(loc);
     }
 
-    public abstract boolean checkType(TypeCheck tc);
+    public abstract ErrorHandler.ErrorCode checkType(TypeCheck tc);
 }

@@ -34,7 +34,7 @@ public class IfStmt extends Stmt {
         print(ps,"");
     }
 
-	public boolean checkType(TypeCheck tc) {
+	public ErrorHandler.ErrorCode checkType(TypeCheck tc) {
 		return tc.checkIfStmt(this);
 	}
 }

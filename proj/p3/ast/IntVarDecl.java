@@ -10,7 +10,7 @@ public class IntVarDecl extends VarDecl {
         ps.print("int " + ident);
     }
 
-    public boolean checkType(TypeCheck tc) {
+    public ErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkIntVarDecl(this);
     }
 }

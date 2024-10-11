@@ -12,7 +12,7 @@ public class Program extends ASTNode {
         unitList.print(ps,"");
     }
 
-    public boolean checkType(TypeCheck tc) {
+    public ErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return unitList.checkType(tc);
     }
 }

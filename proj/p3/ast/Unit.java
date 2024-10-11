@@ -8,5 +8,5 @@ public abstract class Unit extends ASTNode {
 
     public abstract void print(PrintStream ps, String ident);
 
-    public abstract boolean checkType(TypeCheck tc);
+    public abstract ErrorHandler.ErrorCode checkType(TypeCheck tc);
 }
