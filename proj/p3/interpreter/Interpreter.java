@@ -57,31 +57,14 @@ public class Interpreter {
         TypeCheck typeCheck = new TypeCheck(values);
         AstErrorHandler.ErrorCode code = astRoot.checkType(typeCheck);
         if (!AstErrorHandler.isSuccessful(code)) {
-            switch (code) {
-                case AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR:
-                    Interpreter.fatalError(
-                        "Uncaught static checking error",
-                        Interpreter.EXIT_STATIC_CHECKING_ERROR
-                    );
-                    break;
-                case AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR:
-                    Interpreter.fatalError(
-                        "Uninitialized variable error",
-                        Interpreter.EXIT_UNINITIALIZED_VAR_ERROR
-                    );
-                    break;
-                case AstErrorHandler.ErrorCode.DIV_BY_ZERO_ERROR:
-                    Interpreter.fatalError(
-                        "Division by zero error",
-                        Interpreter.EXIT_DIV_BY_ZERO_ERROR
-                    );
-                    break;
-                case AstErrorHandler.ErrorCode.FAILED_STDIN_READ:
-                    Interpreter.fatalError(
-                        "Failed stdin read error",
-                        Interpreter.EXIT_FAILED_STDIN_READ
-                    );
-                    break;
+            if (code == AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR) {
+                Interpreter.fatalError("Uncaught static checking error", EXIT_STATIC_CHECKING_ERROR);
+            } else if (code == AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR) {
+                Interpreter.fatalError("Uncaught uninitialized variable error", EXIT_UNINITIALIZED_VAR_ERROR);
+            } else if (code == AstErrorHandler.ErrorCode.DIV_BY_ZERO_ERROR) {
+                Interpreter.fatalError("Uncaught division by zero error", EXIT_DIV_BY_ZERO_ERROR);
+            } else if (code == AstErrorHandler.ErrorCode.FAILED_STDIN_READ) {
+                Interpreter.fatalError("Failed to read from stdin", EXIT_FAILED_STDIN_READ);
             }
         }
     }

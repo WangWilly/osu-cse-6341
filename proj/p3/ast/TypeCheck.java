@@ -651,17 +651,12 @@ public final class TypeCheck {
         }
 
         ValueMeta.ValueType type = getExprType(printStmt.expr);
-        switch (type) {
-            case ValueMeta.ValueType.INT:
-                System.out.println(getExprValue(printStmt.expr).getIntValue());
-                break;
-
-            case ValueMeta.ValueType.FLOAT:
-                System.out.println(getExprValue(printStmt.expr).getFloatValue());
-                break;
-        
-            default:
-                return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+        if (type == ValueMeta.ValueType.INT) {
+            System.out.println(getExprValue(printStmt.expr).getIntValue());
+        } else if (type == ValueMeta.ValueType.FLOAT) {
+            System.out.println(getExprValue(printStmt.expr).getFloatValue());
+        } else {
+            return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
 
         return AstErrorHandler.ErrorCode.SUCCESS;
