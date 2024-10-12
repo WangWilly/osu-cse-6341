@@ -83,3 +83,8 @@ make
 
 ./scripts/execHw3.sh s_ #  s1 -> s7:  success
 ```
+
+- 📌 Pack it up:
+```bash
+./scripts/packHw3.sh
+```
