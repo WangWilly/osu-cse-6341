@@ -72,3 +72,14 @@ make
 ```bash
 ./scripts/packHw2.sh
 ```
+
+### 🚩 Project 3
+
+- 📌 [Instructions](https://drive.google.com/file/d/14SI58ZKQvvlxwFbCHz_CgMkI5Oqv6zei/view?usp=sharing)
+- 📌 [Dependent files](https://drive.google.com/drive/folders/1Cqnf5uVXdf0XAzXjrXIoilNs31VMRPrB?usp=sharing)
+- 📌 Test cases
+```bash
+./scripts/makeHw3.sh
+
+./scripts/execHw3.sh s_ #  s1 -> s7:  success
+```
