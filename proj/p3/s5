@@ -1,0 +1,4 @@
+int z = readint;
+{
+  int z = z + readint;
+}

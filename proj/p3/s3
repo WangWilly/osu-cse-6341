@@ -1,0 +1,13 @@
+int a = 2 + readint;
+int b = 3 - readint;
+float c = 1.1 * readfloat;
+float d = 2.2 / readfloat;
+if ((a == b) && (c != d))
+{  print a;
+  a = 0;
+  print a;}
+else
+{  print b;
+  b = 0;
+  print b;
+  a = 1;}

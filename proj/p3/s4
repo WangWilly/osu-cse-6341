@@ -1,0 +1,17 @@
+int x = (5);
+int y = -x;
+ 
+print x + y;
+print x + y;
+print x - y;
+print x / y;
+ 
+if (x > y) { print 1; }
+if (x >= y) { print 1; }
+if (x < y) { print 1; }
+if (x <= y) { print 1; }
+if (x != y) { print 1; }
+if (x == y) { print 1; }
+ 
+if ((readint == readint) && (readfloat == readfloat)) { print 1; }
+if ((readint == readint) || !(readfloat == readfloat)) { print 1; }

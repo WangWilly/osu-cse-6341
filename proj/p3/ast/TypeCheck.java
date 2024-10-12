@@ -11,6 +11,7 @@ import java.util.Stack;
 public final class TypeCheck {
     private Stack<Map<String,ValueMeta>> symbolTables;
     private Queue<ValueMeta> injectedValues;
+    private HashMap<Expr, ValueMeta> injectedHashMap = new HashMap<Expr, ValueMeta>();
 
     ////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -356,10 +357,38 @@ public final class TypeCheck {
             }
         }
         if (expr instanceof ReadIntExpr) {
-            return injectedValues.poll();
+            if (injectedHashMap.containsKey(expr)) {
+                return injectedHashMap.get(expr);
+            }
+
+            if (injectedValues == null || injectedValues.isEmpty()) {
+                return null;
+            }
+
+            if (injectedValues.peek().getType() != ValueMeta.ValueType.INT) {
+                return null;
+            }
+
+            ValueMeta value = injectedValues.poll();
+            injectedHashMap.put(expr, value);
+            return value;
         }
         if (expr instanceof ReadFloatExpr) {
-            return injectedValues.poll();
+            if (injectedHashMap.containsKey(expr)) {
+                return injectedHashMap.get(expr);
+            }
+
+            if (injectedValues == null || injectedValues.isEmpty()) {
+                return null;
+            }
+
+            if (injectedValues.peek().getType() != ValueMeta.ValueType.FLOAT) {
+                return null;
+            }
+
+            ValueMeta value = injectedValues.poll();
+            injectedHashMap.put(expr, value);
+            return value;
         }
 
         return null;
@@ -516,20 +545,14 @@ public final class TypeCheck {
     }
 
     public AstErrorHandler.ErrorCode checkReadIntExpr(ReadIntExpr readIntExpr) {
-        if (injectedValues == null || injectedValues.isEmpty()) {
-            return AstErrorHandler.ErrorCode.FAILED_STDIN_READ;
-        }
-        if (injectedValues.peek().getType() != ValueMeta.ValueType.INT) {
+        if (getExprValue(readIntExpr) == null) {
             return AstErrorHandler.ErrorCode.FAILED_STDIN_READ;
         }
         return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
     public AstErrorHandler.ErrorCode checkReadFloatExpr(ReadFloatExpr readFloatExpr) {
-        if (injectedValues == null || injectedValues.isEmpty()) {
-            return AstErrorHandler.ErrorCode.FAILED_STDIN_READ;
-        }
-        if (injectedValues.peek().getType() != ValueMeta.ValueType.FLOAT) {
+        if (getExprValue(readFloatExpr) == null) {
             return AstErrorHandler.ErrorCode.FAILED_STDIN_READ;
         }
         return AstErrorHandler.ErrorCode.SUCCESS;

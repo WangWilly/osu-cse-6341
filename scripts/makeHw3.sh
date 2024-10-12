@@ -6,7 +6,4 @@ project3_dir="${current_dir}/proj/p3"
 
 # Change the current directory to the directory of the script
 cd $project3_dir
-
-if [ "$#" -eq 2 ]; then
-    ./plan $1 < $2
-fi
+make
