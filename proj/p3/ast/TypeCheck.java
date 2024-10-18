@@ -117,14 +117,14 @@ public final class TypeCheck {
         if (this.symbolTables.peek().containsKey(varDecl.ident)) {
             return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
-        return putValue(varDecl.ident, new ValueMeta(varDecl.ident, ValueMeta.ValueType.INT));
+        return putValue(varDecl.ident, ValueMeta.createNull(varDecl.ident, ValueMeta.ValueType.INT));
     }
 
     public AstErrorHandler.ErrorCode checkFloatVarDecl(FloatVarDecl varDecl) {
         if (this.symbolTables.peek().containsKey(varDecl.ident)) {
             return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
-        return putValue(varDecl.ident, new ValueMeta(varDecl.ident, ValueMeta.ValueType.FLOAT));
+        return putValue(varDecl.ident, ValueMeta.createNull(varDecl.ident, ValueMeta.ValueType.FLOAT));
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -140,26 +140,26 @@ public final class TypeCheck {
         switch (binExpr.op) {
             case BinaryExpr.PLUS:
                 if (left.getType() == ValueMeta.ValueType.INT && right.getType() == ValueMeta.ValueType.INT) {
-                    return new ValueMeta(null, ValueMeta.ValueType.INT, left.getIntValue() + right.getIntValue());
+                    return ValueMeta.createInt(null, left.getIntValue() + right.getIntValue());
                 }
                 if (left.getType() == ValueMeta.ValueType.FLOAT && right.getType() == ValueMeta.ValueType.FLOAT) {
-                    return new ValueMeta(null, ValueMeta.ValueType.FLOAT, left.getFloatValue() + right.getFloatValue());
+                    return ValueMeta.createFloat(null, left.getFloatValue() + right.getFloatValue());
                 }
                 break;
             case BinaryExpr.MINUS:
                 if (left.getType() == ValueMeta.ValueType.INT && right.getType() == ValueMeta.ValueType.INT) {
-                    return new ValueMeta(null, ValueMeta.ValueType.INT, left.getIntValue() - right.getIntValue());
+                    return ValueMeta.createInt(null, left.getIntValue() - right.getIntValue());
                 }
                 if (left.getType() == ValueMeta.ValueType.FLOAT && right.getType() == ValueMeta.ValueType.FLOAT) {
-                    return new ValueMeta(null, ValueMeta.ValueType.FLOAT, left.getFloatValue() - right.getFloatValue());
+                    return ValueMeta.createFloat(null, left.getFloatValue() - right.getFloatValue());
                 }
                 break;
             case BinaryExpr.TIMES:
                 if (left.getType() == ValueMeta.ValueType.INT && right.getType() == ValueMeta.ValueType.INT) {
-                    return new ValueMeta(null, ValueMeta.ValueType.INT, left.getIntValue() * right.getIntValue());
+                    return ValueMeta.createInt(null, left.getIntValue() * right.getIntValue());
                 }
                 if (left.getType() == ValueMeta.ValueType.FLOAT && right.getType() == ValueMeta.ValueType.FLOAT) {
-                    return new ValueMeta(null, ValueMeta.ValueType.FLOAT, left.getFloatValue() * right.getFloatValue());
+                    return ValueMeta.createFloat(null, left.getFloatValue() * right.getFloatValue());
                 }
                 break;
             case BinaryExpr.DIV:
@@ -168,14 +168,14 @@ public final class TypeCheck {
                         // TODO:
                         return null;
                     }
-                    return new ValueMeta(null, ValueMeta.ValueType.INT, left.getIntValue() / right.getIntValue());
+                    return ValueMeta.createInt(null, left.getIntValue() / right.getIntValue());
                 }
                 if (left.getType() == ValueMeta.ValueType.FLOAT && right.getType() == ValueMeta.ValueType.FLOAT) {
                     if (right.getFloatValue() == 0.0) {
                         // TODO:
                         return null;
                     }
-                    return new ValueMeta(null, ValueMeta.ValueType.FLOAT, left.getFloatValue() / right.getFloatValue());
+                    return ValueMeta.createFloat(null, left.getFloatValue() / right.getFloatValue());
                 }
                 break;
         }
@@ -186,11 +186,11 @@ public final class TypeCheck {
     private ValueMeta getExprValue(Expr expr) {
         if (expr instanceof IntConstExpr) {
             IntConstExpr intConstExpr = (IntConstExpr) expr;
-            return new ValueMeta(null, ValueMeta.ValueType.INT, intConstExpr.ival);
+            return ValueMeta.createInt(null, intConstExpr.ival);
         }
         if (expr instanceof FloatConstExpr) {
             FloatConstExpr floatConstExpr = (FloatConstExpr) expr;
-            return new ValueMeta(null, ValueMeta.ValueType.FLOAT, floatConstExpr.fval);
+            return ValueMeta.createFloat(null, floatConstExpr.fval);
         }
         if (expr instanceof IdentExpr) {
             IdentExpr identExpr = (IdentExpr) expr;
@@ -208,10 +208,10 @@ public final class TypeCheck {
             UnaryMinusExpr unaryMinusExpr = (UnaryMinusExpr) expr;
             ValueMeta value = getExprValue(unaryMinusExpr.expr);
             if (value.getType() == ValueMeta.ValueType.INT) {
-                return new ValueMeta(null, ValueMeta.ValueType.INT, -value.getIntValue());
+                return ValueMeta.createInt(null, -value.getIntValue());
             }
             if (value.getType() == ValueMeta.ValueType.FLOAT) {
-                return new ValueMeta(null, ValueMeta.ValueType.FLOAT, -value.getFloatValue());
+                return ValueMeta.createFloat(null, -value.getFloatValue());
             }
         }
         if (expr instanceof ReadIntExpr) {

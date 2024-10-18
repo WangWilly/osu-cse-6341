@@ -45,9 +45,9 @@ public class Interpreter {
         Queue<ValueMeta> values = new LinkedList<>();
         while (s.hasNext()) {
             if (s.hasNextInt()) {
-                values.add(new ValueMeta(null, ValueMeta.ValueType.INT, Long.valueOf(s.nextInt())));
+                values.add(ValueMeta.createInt(null, Long.valueOf(s.nextInt())));
             } else if (s.hasNextFloat()) {
-                values.add(new ValueMeta(null, ValueMeta.ValueType.FLOAT, Double.valueOf(s.nextFloat())));
+                values.add(ValueMeta.createFloat(null, Double.valueOf(s.nextFloat())));
             } else {
                 Interpreter.fatalError("Failed to read from stdin", EXIT_FAILED_STDIN_READ);
             }
