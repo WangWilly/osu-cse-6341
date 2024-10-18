@@ -42,6 +42,21 @@ public final class ValueMeta {
         return new ValueMeta(ident, type, null, null, null);
     }
 
+    public static ValueMeta createZero(String ident, ValueType type) {
+        // dummy value
+        if (type == ValueType.INT) {
+            return new ValueMeta(ident, type, Long.valueOf(0), null, null);
+        }
+        if (type == ValueType.FLOAT) {
+            return new ValueMeta(ident, type, null, Double.valueOf(0.0), null);
+        }
+        if (type == ValueType.BOOL) {
+            return new ValueMeta(ident, type, null, null, Boolean.FALSE);
+        }
+
+        throw new RuntimeException("ValueMeta: createZero() called on UNDEFINED type");
+    }
+
     public static ValueMeta createInt(String ident, Long intValue) {
         ValueMeta value = new ValueMeta(ident, ValueType.INT, intValue, null, null);
         return value;

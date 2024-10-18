@@ -89,12 +89,18 @@ public final class TypeCheck {
 
         // Update
         if (declType == ValueMeta.ValueType.INT || declType == ValueMeta.ValueType.FLOAT) {
+            /** TODO: move to runtime
             ValueMeta referVal = getExprValue(decl.expr);
             if (referVal == null) {
                 return AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR;
             }
             ValueMeta value = referVal.copyWithIdent(decl.varDecl.ident);
-            return putValue(decl.varDecl.ident, value);
+            */
+            ValueMeta.ValueType exprType = typeHelper.getExprType(decl.expr);
+            if (declType != exprType) {
+                return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+            }
+            return putValue(decl.varDecl.ident, ValueMeta.createZero(decl.varDecl.ident, declType));
         }
 
         return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
@@ -321,6 +327,8 @@ public final class TypeCheck {
             return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
 
+        /**
+        // TODO:
         if (binExpr.op == BinaryExpr.DIV) {
             if (right == ValueMeta.ValueType.INT && getExprValue(binExpr.expr2).getIntValue() == 0) {
                 return AstErrorHandler.ErrorCode.DIV_BY_ZERO_ERROR;
@@ -329,6 +337,7 @@ public final class TypeCheck {
                 return AstErrorHandler.ErrorCode.DIV_BY_ZERO_ERROR;
             }
         }
+        */
         
         if (left == right) {
             return AstErrorHandler.ErrorCode.SUCCESS;
@@ -495,8 +504,8 @@ public final class TypeCheck {
         }
 
         // Update
-        ValueMeta value = getExprValue(assignStmt.expr).copyWithIdent(assignStmt.ident);
-        putValue(assignStmt.ident, value);
+        // ValueMeta value = getExprValue(assignStmt.expr).copyWithIdent(assignStmt.ident);
+        putValue(assignStmt.ident, ValueMeta.createZero(assignStmt.ident, meta.getType()));
 
         return AstErrorHandler.ErrorCode.SUCCESS;
     }
