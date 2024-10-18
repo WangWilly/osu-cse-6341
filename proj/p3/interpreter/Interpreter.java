@@ -1,13 +1,14 @@
 package interpreter;
 
-import java.io.*;
-import java.util.*;
-import parser.ParserWrapper;
+import ast.AstErrorHandler;
 import ast.Program;
 import ast.TypeCheck;
-import ast.AstErrorHandler;
+import ast.TypeHelper;
 import ast.ValueMeta;
+import java.io.*;
+import java.util.*;
 import java.util.Scanner;
+import parser.ParserWrapper;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -54,7 +55,9 @@ public class Interpreter {
 
         // type checking. If the program does not typecheck,
         // call fatalError with return code EXIT_STATIC_CHECKING_ERROR
-        TypeCheck typeCheck = new TypeCheck(values);
+        Stack<Map<String,ValueMeta>> symbolTables = new Stack<Map<String,ValueMeta>>();
+        TypeHelper typeHelper = new TypeHelper(symbolTables);
+        TypeCheck typeCheck = new TypeCheck(typeHelper, symbolTables, values);
         AstErrorHandler.ErrorCode code = astRoot.checkType(typeCheck);
         if (!AstErrorHandler.isSuccessful(code)) {
             if (code == AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR) {
