@@ -10,7 +10,6 @@ import java.util.Stack;
 ////////////////////////////////////////////////////////////////////////////////
 
 public final class TypeCheck {
-    private Stack<Map<String,ValueMeta>> symbolTables; // TODO: to be removed
     private TypeHelper typeHelper;
     private Queue<ValueMeta> injectedValues;
     private HashMap<Expr, ValueMeta> injectedHashMap = new HashMap<Expr, ValueMeta>();
@@ -18,51 +17,10 @@ public final class TypeCheck {
     ////////////////////////////////////////////////////////////////////////////
     // Constructor
 
-    public TypeCheck(TypeHelper typeHelper, Stack<Map<String,ValueMeta>> symbolTables, Queue<ValueMeta> injectedValues) {
-        this.symbolTables = symbolTables;
+    public TypeCheck(TypeHelper typeHelper, Queue<ValueMeta> injectedValues) {
         this.typeHelper = typeHelper;
-        // global scope
-        this.symbolTables.push(new HashMap<String,ValueMeta>());
+        typeHelper.newScope(); // global scope
         this.injectedValues = injectedValues;
-    }
-
-    ////////////////////////////////////////////////////////////////////////////
-    // SymbolTable (helper)
-
-    // TODO:
-    private void pushSymbolTable() {
-        this.symbolTables.push(new HashMap<String,ValueMeta>());
-    }
-
-    // TODO:
-    private boolean popSymbolTable() {
-        if (this.symbolTables.size() <= 1) {
-            return false;
-        }
-
-        this.symbolTables.pop();
-        return true;
-    }
-
-    // TODO:
-    private ValueMeta findValue(String ident) {
-        for (int i = this.symbolTables.size() - 1; i >= 0; i--) {
-            ValueMeta value = this.symbolTables.get(i).get(ident);
-            if (value == null || !value.hasValue()) {
-                continue;
-            }
-            return value;
-        }
-        return null;
-    }
-
-    // TODO:
-    private AstErrorHandler.ErrorCode putValue(String ident, ValueMeta value) {
-        // if (getValue(ident) != null) {
-        //     return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
-        // }
-        this.symbolTables.peek().put(ident, value);
-        return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -102,7 +60,9 @@ public final class TypeCheck {
             if (declType != exprType) {
                 return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
             }
-            return putValue(decl.varDecl.ident, ValueMeta.createZero(decl.varDecl.ident, declType));
+            // the ident is declared in the current scope so it's safe to replace
+            typeHelper.replaceIdent(decl.varDecl.ident, ValueMeta.createZero(decl.varDecl.ident, declType));
+            return AstErrorHandler.ErrorCode.SUCCESS;
         }
 
         return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
@@ -122,17 +82,19 @@ public final class TypeCheck {
     }
 
     public AstErrorHandler.ErrorCode checkIntVarDecl(IntVarDecl varDecl) {
-        if (this.symbolTables.peek().containsKey(varDecl.ident)) {
+        if (typeHelper.isLocalDeclared(varDecl.ident)) {
             return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
-        return putValue(varDecl.ident, ValueMeta.createNull(varDecl.ident, ValueMeta.ValueType.INT));
+        typeHelper.newIdent(varDecl.ident, ValueMeta.createNull(varDecl.ident, ValueMeta.ValueType.INT));
+        return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
     public AstErrorHandler.ErrorCode checkFloatVarDecl(FloatVarDecl varDecl) {
-        if (this.symbolTables.peek().containsKey(varDecl.ident)) {
+        if (typeHelper.isLocalDeclared(varDecl.ident)) {
             return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
-        return putValue(varDecl.ident, ValueMeta.createNull(varDecl.ident, ValueMeta.ValueType.FLOAT));
+        typeHelper.newIdent(varDecl.ident, ValueMeta.createNull(varDecl.ident, ValueMeta.ValueType.FLOAT));
+        return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -328,9 +290,10 @@ public final class TypeCheck {
     }
 
     public AstErrorHandler.ErrorCode checkBlockStmt(BlockStmt blockStmt) {
-        pushSymbolTable();
+        // pushSymbolTable();
+        typeHelper.newScope();
         AstErrorHandler.ErrorCode code = checkUnitList(blockStmt.block);
-        return popSymbolTable() ? code : AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+        return typeHelper.exitScope() ? code : AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
     }
 
     public AstErrorHandler.ErrorCode checkIfStmt(IfStmt ifStmt) {
@@ -389,7 +352,7 @@ public final class TypeCheck {
 
         // Update
         // ValueMeta value = getExprValue(assignStmt.expr).copyWithIdent(assignStmt.ident);
-        putValue(assignStmt.ident, ValueMeta.createZero(assignStmt.ident, identType));
+        typeHelper.replaceIdent(assignStmt.ident, ValueMeta.createZero(assignStmt.ident, identType));
 
         return AstErrorHandler.ErrorCode.SUCCESS;
     }

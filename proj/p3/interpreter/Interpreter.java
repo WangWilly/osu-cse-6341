@@ -57,7 +57,7 @@ public class Interpreter {
         // call fatalError with return code EXIT_STATIC_CHECKING_ERROR
         Stack<Map<String,ValueMeta>> symbolTables = new Stack<Map<String,ValueMeta>>();
         TypeHelper typeHelper = new TypeHelper(symbolTables);
-        TypeCheck typeCheck = new TypeCheck(typeHelper, symbolTables, values);
+        TypeCheck typeCheck = new TypeCheck(typeHelper, values);
         AstErrorHandler.ErrorCode code = astRoot.checkType(typeCheck);
         if (!AstErrorHandler.isSuccessful(code)) {
             if (code == AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR) {

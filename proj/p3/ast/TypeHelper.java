@@ -1,6 +1,7 @@
 package ast;
 import java.util.Stack;
 import java.util.Map;
+import java.util.HashMap;
 
 public class TypeHelper {
     Stack<Map<String,ValueMeta>> symbolTables;
@@ -33,6 +34,37 @@ public class TypeHelper {
         return refer;
     }
     */
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    public boolean newScope() {
+        symbolTables.push(new HashMap<String,ValueMeta>());
+        return true;
+    }
+
+    public boolean exitScope() {
+        if (symbolTables.size() <= 1) {
+            return false;
+        }
+        symbolTables.pop();
+        return true;
+    }
+
+    public boolean newIdent(String ident, ValueMeta value) {
+        symbolTables.peek().put(ident, value);
+        return true;
+    }
+
+    public boolean replaceIdent(String ident, ValueMeta value) {
+        for (int i = symbolTables.size() - 1; i >= 0; i--) {
+            if (!symbolTables.get(i).containsKey(ident)) {
+                continue;
+            }
+            symbolTables.get(i).put(ident, value);
+            return true;
+        }
+        return false;
+    }
 
     ////////////////////////////////////////////////////////////////////////////
 
