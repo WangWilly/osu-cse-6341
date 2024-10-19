@@ -11,16 +11,13 @@ import java.util.Stack;
 
 public final class TypeCheck {
     private TypeHelper typeHelper;
-    private Queue<ValueMeta> injectedValues;
-    private HashMap<Expr, ValueMeta> injectedHashMap = new HashMap<Expr, ValueMeta>();
 
     ////////////////////////////////////////////////////////////////////////////
     // Constructor
 
-    public TypeCheck(TypeHelper typeHelper, Queue<ValueMeta> injectedValues) {
+    public TypeCheck(TypeHelper typeHelper) {
         this.typeHelper = typeHelper;
         typeHelper.newScope(); // global scope
-        this.injectedValues = injectedValues;
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -61,7 +58,7 @@ public final class TypeCheck {
                 return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
             }
             // the ident is declared in the current scope so it's safe to replace
-            typeHelper.replaceIdent(decl.varDecl.ident, ValueMeta.createZero(decl.varDecl.ident, declType));
+            typeHelper.concreteIdent(decl.varDecl.ident, declType);
             return AstErrorHandler.ErrorCode.SUCCESS;
         }
 
@@ -82,18 +79,18 @@ public final class TypeCheck {
     }
 
     public AstErrorHandler.ErrorCode checkIntVarDecl(IntVarDecl varDecl) {
-        if (typeHelper.isLocalDeclared(varDecl.ident)) {
+        if (typeHelper.isLocalPlaned(varDecl.ident)) {
             return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
-        typeHelper.newIdent(varDecl.ident, ValueMeta.createNull(varDecl.ident, ValueMeta.ValueType.INT));
+        typeHelper.planIdent(varDecl.ident, ValueMeta.ValueType.INT);
         return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
     public AstErrorHandler.ErrorCode checkFloatVarDecl(FloatVarDecl varDecl) {
-        if (typeHelper.isLocalDeclared(varDecl.ident)) {
+        if (typeHelper.isLocalPlaned(varDecl.ident)) {
             return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
-        typeHelper.newIdent(varDecl.ident, ValueMeta.createNull(varDecl.ident, ValueMeta.ValueType.FLOAT));
+        typeHelper.planIdent(varDecl.ident, ValueMeta.ValueType.FLOAT);
         return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
@@ -137,7 +134,7 @@ public final class TypeCheck {
     public AstErrorHandler.ErrorCode checkIdentExpr(IdentExpr identExpr) {
         // ValueMeta meta = findValue(identExpr.ident);
         // if (meta == null) {
-        if (!typeHelper.hasValue(identExpr.ident)) {
+        if (!typeHelper.isConcreted(identExpr.ident)) {
             return AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR;
         }
         return AstErrorHandler.ErrorCode.SUCCESS;
@@ -334,7 +331,7 @@ public final class TypeCheck {
         // Validate
         // ValueMeta meta = findValue(assignStmt.ident);
         // if (meta == null) {
-        if (!typeHelper.isDeclared(assignStmt.ident)) {
+        if (!typeHelper.isPlaned(assignStmt.ident)) {
             return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
 
@@ -352,7 +349,7 @@ public final class TypeCheck {
 
         // Update
         // ValueMeta value = getExprValue(assignStmt.expr).copyWithIdent(assignStmt.ident);
-        typeHelper.replaceIdent(assignStmt.ident, ValueMeta.createZero(assignStmt.ident, identType));
+        typeHelper.concreteIdent(assignStmt.ident, identType);
 
         return AstErrorHandler.ErrorCode.SUCCESS;
     }

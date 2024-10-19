@@ -4,7 +4,9 @@ import java.util.Map;
 import java.util.HashMap;
 
 public class TypeHelper {
-    Stack<Map<String,ValueMeta>> symbolTables;
+    ////////////////////////////////////////////////////////////////////////////
+    // Injection
+    private Stack<Map<String,ValueMeta>> symbolTables;
 
     ////////////////////////////////////////////////////////////////////////////
 
@@ -25,17 +27,8 @@ public class TypeHelper {
         return null;
     }
 
-    /**
-    private ValueMeta getValidValue(String ident) {
-        ValueMeta refer = getValue(ident);
-        if (refer.getIntValue() == null && refer.getFloatValue() == null) {
-            return null;
-        }
-        return refer;
-    }
-    */
-
     ////////////////////////////////////////////////////////////////////////////
+    // Ident control (w/o value)
 
     public boolean newScope() {
         symbolTables.push(new HashMap<String,ValueMeta>());
@@ -50,27 +43,27 @@ public class TypeHelper {
         return true;
     }
 
-    public boolean newIdent(String ident, ValueMeta value) {
+    public void planIdent(String ident, ValueMeta.ValueType type) {
+        if (isLocalPlaned(ident)) {
+            throw new RuntimeException("Variable " + ident + " already declared");
+        }
+        ValueMeta value = ValueMeta.createNull(ident, type);
         symbolTables.peek().put(ident, value);
-        return true;
     }
 
-    public boolean replaceIdent(String ident, ValueMeta value) {
+    public void concreteIdent(String ident, ValueMeta.ValueType type) {
+        ValueMeta value = ValueMeta.createZero(ident, type);
         for (int i = symbolTables.size() - 1; i >= 0; i--) {
             if (!symbolTables.get(i).containsKey(ident)) {
                 continue;
             }
             symbolTables.get(i).put(ident, value);
-            return true;
+            return;
         }
-        return false;
+        throw new RuntimeException("Variable " + ident + " not declared");
     }
 
     ////////////////////////////////////////////////////////////////////////////
-
-    public boolean hasValue(String ident) {
-        return findValue(ident) != null;
-    }
 
     public ValueMeta.ValueType getType(String ident) {
         ValueMeta value = findValue(ident);
@@ -80,11 +73,11 @@ public class TypeHelper {
         return value.getType();
     }
 
-    public boolean isLocalDeclared(String ident) {
+    public boolean isLocalPlaned(String ident) {
         return symbolTables.peek().containsKey(ident);
     }
 
-    public boolean isDeclared(String ident) {
+    public boolean isPlaned(String ident) {
         for (int i = this.symbolTables.size() - 1; i >= 0; i--) {
             if (!this.symbolTables.get(i).containsKey(ident)) {
                 continue;
@@ -92,6 +85,10 @@ public class TypeHelper {
             return true;
         }
         return false;
+    }
+
+    public boolean isConcreted(String ident) {
+        return findValue(ident) != null;
     }
 
     ////////////////////////////////////////////////////////////////////////////
