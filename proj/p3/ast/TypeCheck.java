@@ -10,14 +10,14 @@ import java.util.Stack;
 ////////////////////////////////////////////////////////////////////////////////
 
 public final class TypeCheck {
-    private TypeHelper typeHelper;
+    private SymbolTableHelper symbolTableHelper;
 
     ////////////////////////////////////////////////////////////////////////////
     // Constructor
 
-    public TypeCheck(TypeHelper typeHelper) {
-        this.typeHelper = typeHelper;
-        typeHelper.newScope(); // global scope
+    public TypeCheck(SymbolTableHelper symbolTableHelper) {
+        this.symbolTableHelper = symbolTableHelper;
+        symbolTableHelper.newScope(); // global scope
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -39,26 +39,19 @@ public final class TypeCheck {
         
 
         // Check
-        ValueMeta.ValueType declType = typeHelper.getDeclType(decl);
+        ValueMeta.ValueType declType = symbolTableHelper.getDeclType(decl);
         if (declType == ValueMeta.ValueType.UNDEFINED) {
             return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
 
         // Update
         if (declType == ValueMeta.ValueType.INT || declType == ValueMeta.ValueType.FLOAT) {
-            /** TODO: move to runtime
-            ValueMeta referVal = getExprValue(decl.expr);
-            if (referVal == null) {
-                return AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR;
-            }
-            ValueMeta value = referVal.copyWithIdent(decl.varDecl.ident);
-            */
-            ValueMeta.ValueType exprType = typeHelper.getExprType(decl.expr);
+            ValueMeta.ValueType exprType = symbolTableHelper.getExprType(decl.expr);
             if (declType != exprType) {
                 return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
             }
             // the ident is declared in the current scope so it's safe to replace
-            typeHelper.concreteIdent(decl.varDecl.ident, declType);
+            symbolTableHelper.concreteIdent(decl.varDecl.ident, declType);
             return AstErrorHandler.ErrorCode.SUCCESS;
         }
 
@@ -79,18 +72,18 @@ public final class TypeCheck {
     }
 
     public AstErrorHandler.ErrorCode checkIntVarDecl(IntVarDecl varDecl) {
-        if (typeHelper.isLocalPlaned(varDecl.ident)) {
+        if (symbolTableHelper.isLocalPlaned(varDecl.ident)) {
             return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
-        typeHelper.planIdent(varDecl.ident, ValueMeta.ValueType.INT);
+        symbolTableHelper.planIdent(varDecl.ident, ValueMeta.ValueType.INT);
         return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
     public AstErrorHandler.ErrorCode checkFloatVarDecl(FloatVarDecl varDecl) {
-        if (typeHelper.isLocalPlaned(varDecl.ident)) {
+        if (symbolTableHelper.isLocalPlaned(varDecl.ident)) {
             return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
-        typeHelper.planIdent(varDecl.ident, ValueMeta.ValueType.FLOAT);
+        symbolTableHelper.planIdent(varDecl.ident, ValueMeta.ValueType.FLOAT);
         return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
@@ -134,7 +127,7 @@ public final class TypeCheck {
     public AstErrorHandler.ErrorCode checkIdentExpr(IdentExpr identExpr) {
         // ValueMeta meta = findValue(identExpr.ident);
         // if (meta == null) {
-        if (!typeHelper.isConcreted(identExpr.ident)) {
+        if (!symbolTableHelper.isConcreted(identExpr.ident)) {
             return AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR;
         }
         return AstErrorHandler.ErrorCode.SUCCESS;
@@ -157,24 +150,12 @@ public final class TypeCheck {
             return code;
         }
 
-        ValueMeta.ValueType left = typeHelper.getExprType(binExpr.expr1);
-        ValueMeta.ValueType right = typeHelper.getExprType(binExpr.expr2);
+        ValueMeta.ValueType left = symbolTableHelper.getExprType(binExpr.expr1);
+        ValueMeta.ValueType right = symbolTableHelper.getExprType(binExpr.expr2);
 
         if (left == ValueMeta.ValueType.UNDEFINED || right == ValueMeta.ValueType.UNDEFINED) {
             return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
-
-        /**
-        // TODO:
-        if (binExpr.op == BinaryExpr.DIV) {
-            if (right == ValueMeta.ValueType.INT && getExprValue(binExpr.expr2).getIntValue() == 0) {
-                return AstErrorHandler.ErrorCode.DIV_BY_ZERO_ERROR;
-            }
-            if (right == ValueMeta.ValueType.FLOAT && getExprValue(binExpr.expr2).getFloatValue() == 0.0) {
-                return AstErrorHandler.ErrorCode.DIV_BY_ZERO_ERROR;
-            }
-        }
-        */
         
         if (left == right) {
             return AstErrorHandler.ErrorCode.SUCCESS;
@@ -207,8 +188,8 @@ public final class TypeCheck {
             return code;
         }
 
-        ValueMeta.ValueType left = typeHelper.getExprType(compExpr.expr1);
-        ValueMeta.ValueType right = typeHelper.getExprType(compExpr.expr2);
+        ValueMeta.ValueType left = symbolTableHelper.getExprType(compExpr.expr1);
+        ValueMeta.ValueType right = symbolTableHelper.getExprType(compExpr.expr2);
 
         if (left == ValueMeta.ValueType.UNDEFINED || right == ValueMeta.ValueType.UNDEFINED) {
             return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
@@ -249,20 +230,10 @@ public final class TypeCheck {
     }
 
     public AstErrorHandler.ErrorCode checkReadIntExpr(ReadIntExpr readIntExpr) {
-        /** TODO:
-        if (getExprValue(readIntExpr) == null) {
-            return AstErrorHandler.ErrorCode.FAILED_STDIN_READ;
-        }
-        */
         return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
     public AstErrorHandler.ErrorCode checkReadFloatExpr(ReadFloatExpr readFloatExpr) {
-        /** TODO:
-        if (getExprValue(readFloatExpr) == null) {
-            return AstErrorHandler.ErrorCode.FAILED_STDIN_READ;
-        }
-        */
         return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
@@ -276,6 +247,9 @@ public final class TypeCheck {
         if (stmt instanceof IfStmt) {
             return checkIfStmt((IfStmt) stmt);
         }
+        if (stmt instanceof WhileStmt) {
+            return checkWhileStmt((WhileStmt) stmt);
+        }
         if (stmt instanceof AssignStmt) {
             return checkAssignStmt((AssignStmt) stmt);
         }
@@ -288,9 +262,9 @@ public final class TypeCheck {
 
     public AstErrorHandler.ErrorCode checkBlockStmt(BlockStmt blockStmt) {
         // pushSymbolTable();
-        typeHelper.newScope();
+        symbolTableHelper.newScope();
         AstErrorHandler.ErrorCode code = checkUnitList(blockStmt.block);
-        return typeHelper.exitScope() ? code : AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+        return symbolTableHelper.exitScope() ? code : AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
     }
 
     public AstErrorHandler.ErrorCode checkIfStmt(IfStmt ifStmt) {
@@ -331,7 +305,7 @@ public final class TypeCheck {
         // Validate
         // ValueMeta meta = findValue(assignStmt.ident);
         // if (meta == null) {
-        if (!typeHelper.isPlaned(assignStmt.ident)) {
+        if (!symbolTableHelper.isPlaned(assignStmt.ident)) {
             return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
 
@@ -341,15 +315,15 @@ public final class TypeCheck {
             return code;
         }
 
-        ValueMeta.ValueType identType = typeHelper.getType(assignStmt.ident);
-        ValueMeta.ValueType exprType = typeHelper.getExprType(assignStmt.expr);
+        ValueMeta.ValueType identType = symbolTableHelper.getType(assignStmt.ident);
+        ValueMeta.ValueType exprType = symbolTableHelper.getExprType(assignStmt.expr);
         if (identType != exprType) {
             return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
 
         // Update
         // ValueMeta value = getExprValue(assignStmt.expr).copyWithIdent(assignStmt.ident);
-        typeHelper.concreteIdent(assignStmt.ident, identType);
+        symbolTableHelper.concreteIdent(assignStmt.ident, identType);
 
         return AstErrorHandler.ErrorCode.SUCCESS;
     }
@@ -361,7 +335,7 @@ public final class TypeCheck {
             return code;
         }
 
-        ValueMeta.ValueType type = typeHelper.getExprType(printStmt.expr);
+        ValueMeta.ValueType type = symbolTableHelper.getExprType(printStmt.expr);
         /**
         if (type == ValueMeta.ValueType.INT) {
             System.out.println(getExprValue(printStmt.expr).getIntValue());

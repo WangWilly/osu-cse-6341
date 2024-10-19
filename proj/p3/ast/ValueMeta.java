@@ -124,9 +124,97 @@ public final class ValueMeta {
         return ident + " (undefined)";
     }
 
+    public void print() {
+        if (type == ValueType.INT && intValue != null) {
+            System.out.println(intValue);
+        }
+        if (type == ValueType.FLOAT && floatValue != null) {
+            System.out.println(floatValue);
+        }
+        if (type == ValueType.BOOL && boolValue != null) {
+            System.out.println(boolValue);
+        }
+
+        throw new RuntimeException("ValueMeta: print() called on UNDEFINED type");
+    }
+
     ////////////////////////////////////////////////////////////////////////////
 
     public ValueMeta copyWithIdent(String ident) {
         return new ValueMeta(ident, this.type, this.intValue, this.floatValue, this.boolValue);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    public static boolean equals(ValueMeta left, ValueMeta right) {
+        if (left == null || right == null) {
+            throw new RuntimeException("ValueMeta: equals() called on null");
+        }
+
+        if (left.getType() != right.getType()) {
+            throw new RuntimeException("ValueMeta: equals() called on different types");
+        }
+
+        if (left.getType() == ValueType.INT) {
+            return left.getIntValue() == right.getIntValue();
+        }
+        if (left.getType() == ValueType.FLOAT) {
+            return left.getFloatValue() == right.getFloatValue();
+        }
+        if (left.getType() == ValueType.BOOL) {
+            return left.getBoolValue() == right.getBoolValue();
+        }
+
+        throw new RuntimeException("ValueMeta: equals() called on UNDEFINED type");
+    }
+
+    public static boolean notEquals(ValueMeta left, ValueMeta right) {
+        return !equals(left, right);
+    }
+
+    public static boolean lessThan(ValueMeta left, ValueMeta right) {
+        if (left == null || right == null) {
+            throw new RuntimeException("ValueMeta: lessThan() called on null");
+        }
+
+        if (left.getType() != right.getType()) {
+            throw new RuntimeException("ValueMeta: lessThan() called on different types");
+        }
+
+        if (left.getType() == ValueType.INT) {
+            return left.getIntValue() < right.getIntValue();
+        }
+        if (left.getType() == ValueType.FLOAT) {
+            return left.getFloatValue() < right.getFloatValue();
+        }
+
+        throw new RuntimeException("ValueMeta: lessThan() called on non-INT/FLOAT type");
+    }
+
+    public static boolean greaterThan(ValueMeta left, ValueMeta right) {
+        if (left == null || right == null) {
+            throw new RuntimeException("ValueMeta: greaterThan() called on null");
+        }
+
+        if (left.getType() != right.getType()) {
+            throw new RuntimeException("ValueMeta: greaterThan() called on different types");
+        }
+
+        if (left.getType() == ValueType.INT) {
+            return left.getIntValue() > right.getIntValue();
+        }
+        if (left.getType() == ValueType.FLOAT) {
+            return left.getFloatValue() > right.getFloatValue();
+        }
+
+        throw new RuntimeException("ValueMeta: greaterThan() called on non-INT/FLOAT type");
+    }
+
+    public static boolean lessThanOrEqual(ValueMeta left, ValueMeta right) {
+        return lessThan(left, right) || equals(left, right);
+    }
+
+    public static boolean greaterThanOrEqual(ValueMeta left, ValueMeta right) {
+        return greaterThan(left, right) || equals(left, right);
     }
 }

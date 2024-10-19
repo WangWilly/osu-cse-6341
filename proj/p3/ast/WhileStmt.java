@@ -25,4 +25,8 @@ public class WhileStmt extends Stmt {
     public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkWhileStmt(this);
     }
+
+    public RuntimeMeta run(Runtime runtime) {
+        return runtime.runWhileStmt(this);
+    }
 }

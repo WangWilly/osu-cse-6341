@@ -34,4 +34,8 @@ public class Decl extends Unit {
 	public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
 		return tc.checkDecl(this);
 	}
+
+    public RuntimeMeta run(Runtime runtime) {
+        return runtime.runDecl(this);
+    }
 }

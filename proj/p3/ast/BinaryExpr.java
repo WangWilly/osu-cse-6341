@@ -32,4 +32,8 @@ public class BinaryExpr extends Expr {
     public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkBinExpr(this);
     }
+
+    public RuntimeMeta run(Runtime runtime) {
+        return runtime.runBinaryExpr(this);
+    }
 }

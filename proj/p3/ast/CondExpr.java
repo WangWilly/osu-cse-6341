@@ -7,4 +7,6 @@ public abstract class CondExpr extends ASTNode {
     }
 
     public abstract AstErrorHandler.ErrorCode checkType(TypeCheck tc);
+
+    public abstract RuntimeMeta run(Runtime runtime);
 }

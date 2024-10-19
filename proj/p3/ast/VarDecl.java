@@ -10,4 +10,6 @@ public abstract class VarDecl extends ASTNode {
     }
 
     public abstract AstErrorHandler.ErrorCode checkType(TypeCheck tc);
+
+    public abstract RuntimeMeta run(Runtime runtime);
 }

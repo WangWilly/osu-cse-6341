@@ -22,4 +22,8 @@ public class BlockStmt extends Stmt {
     public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkBlockStmt(this);
     }
+
+    public RuntimeMeta run(Runtime runtime) {
+        return runtime.runBlockStmt(this);
+    }
 }

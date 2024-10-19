@@ -3,20 +3,20 @@ import java.util.Stack;
 import java.util.Map;
 import java.util.HashMap;
 
-public class TypeHelper {
+public class SymbolTableHelper {
     ////////////////////////////////////////////////////////////////////////////
     // Injection
     private Stack<Map<String,ValueMeta>> symbolTables;
 
     ////////////////////////////////////////////////////////////////////////////
 
-    public TypeHelper(Stack<Map<String,ValueMeta>> symbolTables) {
+    public SymbolTableHelper(Stack<Map<String,ValueMeta>> symbolTables) {
         this.symbolTables = symbolTables;
     }
 
     ////////////////////////////////////////////////////////////////////////////
 
-    private ValueMeta findValue(String ident) {
+    public ValueMeta findValue(String ident) {
         for (int i = symbolTables.size() - 1; i >= 0; i--) {
             ValueMeta value = symbolTables.get(i).get(ident);
             if (value == null || !value.hasValue()) {
@@ -65,14 +65,6 @@ public class TypeHelper {
 
     ////////////////////////////////////////////////////////////////////////////
 
-    public ValueMeta.ValueType getType(String ident) {
-        ValueMeta value = findValue(ident);
-        if (value == null) {
-            return ValueMeta.ValueType.UNDEFINED;
-        }
-        return value.getType();
-    }
-
     public boolean isLocalPlaned(String ident) {
         return symbolTables.peek().containsKey(ident);
     }
@@ -92,7 +84,17 @@ public class TypeHelper {
     }
 
     ////////////////////////////////////////////////////////////////////////////
-    // Decl
+
+    public ValueMeta.ValueType getType(String ident) {
+        ValueMeta value = findValue(ident);
+        if (value == null) {
+            return ValueMeta.ValueType.UNDEFINED;
+        }
+        return value.getType();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Decl type
 
     public ValueMeta.ValueType getVarDeclType(VarDecl varDecl) {
         if (varDecl instanceof IntVarDecl) {
@@ -124,7 +126,7 @@ public class TypeHelper {
     }
 
     ////////////////////////////////////////////////////////////////////////////
-    // Expr
+    // Expr type
 
     public ValueMeta.ValueType getLeftRightExprType(Expr expr1, Expr expr2) {
         ValueMeta.ValueType left = getExprType(expr1);
@@ -202,5 +204,22 @@ public class TypeHelper {
         }
 
         return ValueMeta.ValueType.UNDEFINED;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Envalue
+
+    public void envalue(String ident, ValueMeta value) {
+        for (int i = symbolTables.size() - 1; i >= 0; i--) {
+            if (!symbolTables.get(i).containsKey(ident)) {
+                continue;
+            }
+            if (symbolTables.get(i).get(ident).getType() != value.getType()) {
+                throw new RuntimeException("Variable " + ident + " type mismatch");
+            }
+            symbolTables.get(i).put(ident, value);
+            return;
+        }
+        throw new RuntimeException("Variable " + ident + " not declared");
     }
 }

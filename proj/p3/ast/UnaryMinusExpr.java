@@ -18,4 +18,8 @@ public class UnaryMinusExpr extends Expr {
     public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkUnaryMinusExpr(this);
     }
+
+    public RuntimeMeta run(Runtime runtime) {
+        return runtime.runUnaryMinusExpr(this);
+    }
 }

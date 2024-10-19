@@ -31,4 +31,8 @@ public class UnitList extends ASTNode {
     public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkUnitList(this);
     }
+
+    public RuntimeMeta run(Runtime runtime) {
+        return runtime.runUnitList(this);
+    }
 }

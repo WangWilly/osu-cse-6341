@@ -36,4 +36,8 @@ public class CompExpr extends CondExpr {
 	public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
 		return tc.checkCompExpr(this);
 	}
+
+    public RuntimeMeta run(Runtime runtime) {
+        return runtime.runCompExpr(this);
+    }
 }
