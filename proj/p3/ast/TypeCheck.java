@@ -29,10 +29,12 @@ public final class TypeCheck {
     ////////////////////////////////////////////////////////////////////////////
     // SymbolTable (helper)
 
+    // TODO:
     private void pushSymbolTable() {
         this.symbolTables.push(new HashMap<String,ValueMeta>());
     }
 
+    // TODO:
     private boolean popSymbolTable() {
         if (this.symbolTables.size() <= 1) {
             return false;
@@ -134,131 +136,6 @@ public final class TypeCheck {
     }
 
     ////////////////////////////////////////////////////////////////////////////
-    // Expr (helper)
-
-    private ValueMeta getBinaryExprValue(BinaryExpr binExpr) {
-        ValueMeta left = getExprValue(binExpr.expr1);
-        ValueMeta right = getExprValue(binExpr.expr2);
-        if (left == null || right == null) {
-            return null;
-        }
-
-        switch (binExpr.op) {
-            case BinaryExpr.PLUS:
-                if (left.getType() == ValueMeta.ValueType.INT && right.getType() == ValueMeta.ValueType.INT) {
-                    return ValueMeta.createInt(null, left.getIntValue() + right.getIntValue());
-                }
-                if (left.getType() == ValueMeta.ValueType.FLOAT && right.getType() == ValueMeta.ValueType.FLOAT) {
-                    return ValueMeta.createFloat(null, left.getFloatValue() + right.getFloatValue());
-                }
-                break;
-            case BinaryExpr.MINUS:
-                if (left.getType() == ValueMeta.ValueType.INT && right.getType() == ValueMeta.ValueType.INT) {
-                    return ValueMeta.createInt(null, left.getIntValue() - right.getIntValue());
-                }
-                if (left.getType() == ValueMeta.ValueType.FLOAT && right.getType() == ValueMeta.ValueType.FLOAT) {
-                    return ValueMeta.createFloat(null, left.getFloatValue() - right.getFloatValue());
-                }
-                break;
-            case BinaryExpr.TIMES:
-                if (left.getType() == ValueMeta.ValueType.INT && right.getType() == ValueMeta.ValueType.INT) {
-                    return ValueMeta.createInt(null, left.getIntValue() * right.getIntValue());
-                }
-                if (left.getType() == ValueMeta.ValueType.FLOAT && right.getType() == ValueMeta.ValueType.FLOAT) {
-                    return ValueMeta.createFloat(null, left.getFloatValue() * right.getFloatValue());
-                }
-                break;
-            case BinaryExpr.DIV:
-                if (left.getType() == ValueMeta.ValueType.INT && right.getType() == ValueMeta.ValueType.INT) {
-                    if (right.getIntValue() == 0) {
-                        // TODO:
-                        return null;
-                    }
-                    return ValueMeta.createInt(null, left.getIntValue() / right.getIntValue());
-                }
-                if (left.getType() == ValueMeta.ValueType.FLOAT && right.getType() == ValueMeta.ValueType.FLOAT) {
-                    if (right.getFloatValue() == 0.0) {
-                        // TODO:
-                        return null;
-                    }
-                    return ValueMeta.createFloat(null, left.getFloatValue() / right.getFloatValue());
-                }
-                break;
-        }
-
-        return null;
-    }
-
-    private ValueMeta getExprValue(Expr expr) {
-        if (expr instanceof IntConstExpr) {
-            IntConstExpr intConstExpr = (IntConstExpr) expr;
-            return ValueMeta.createInt(null, intConstExpr.ival);
-        }
-        if (expr instanceof FloatConstExpr) {
-            FloatConstExpr floatConstExpr = (FloatConstExpr) expr;
-            return ValueMeta.createFloat(null, floatConstExpr.fval);
-        }
-        if (expr instanceof IdentExpr) {
-            IdentExpr identExpr = (IdentExpr) expr;
-            ValueMeta val = findValue(identExpr.ident);
-            if (val == null) {
-                return null;
-            }
-            return val;
-        }
-        if (expr instanceof BinaryExpr) {
-            BinaryExpr binExpr = (BinaryExpr) expr;
-            return getBinaryExprValue(binExpr);
-        }
-        if (expr instanceof UnaryMinusExpr) {
-            UnaryMinusExpr unaryMinusExpr = (UnaryMinusExpr) expr;
-            ValueMeta value = getExprValue(unaryMinusExpr.expr);
-            if (value.getType() == ValueMeta.ValueType.INT) {
-                return ValueMeta.createInt(null, -value.getIntValue());
-            }
-            if (value.getType() == ValueMeta.ValueType.FLOAT) {
-                return ValueMeta.createFloat(null, -value.getFloatValue());
-            }
-        }
-        if (expr instanceof ReadIntExpr) {
-            if (injectedHashMap.containsKey(expr)) {
-                return injectedHashMap.get(expr);
-            }
-
-            if (injectedValues == null || injectedValues.isEmpty()) {
-                return null;
-            }
-
-            if (injectedValues.peek().getType() != ValueMeta.ValueType.INT) {
-                return null;
-            }
-
-            ValueMeta value = injectedValues.poll();
-            injectedHashMap.put(expr, value);
-            return value;
-        }
-        if (expr instanceof ReadFloatExpr) {
-            if (injectedHashMap.containsKey(expr)) {
-                return injectedHashMap.get(expr);
-            }
-
-            if (injectedValues == null || injectedValues.isEmpty()) {
-                return null;
-            }
-
-            if (injectedValues.peek().getType() != ValueMeta.ValueType.FLOAT) {
-                return null;
-            }
-
-            ValueMeta value = injectedValues.poll();
-            injectedHashMap.put(expr, value);
-            return value;
-        }
-
-        return null;
-    }
-
-    ////////////////////////////////////////////////////////////////////////////
     // Expr
 
     private AstErrorHandler.ErrorCode checkExpr(Expr expr) {
@@ -296,8 +173,9 @@ public final class TypeCheck {
     }
 
     public AstErrorHandler.ErrorCode checkIdentExpr(IdentExpr identExpr) {
-        ValueMeta meta = findValue(identExpr.ident);
-        if (meta == null) {
+        // ValueMeta meta = findValue(identExpr.ident);
+        // if (meta == null) {
+        if (!typeHelper.hasValue(identExpr.ident)) {
             return AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR;
         }
         return AstErrorHandler.ErrorCode.SUCCESS;
@@ -412,16 +290,20 @@ public final class TypeCheck {
     }
 
     public AstErrorHandler.ErrorCode checkReadIntExpr(ReadIntExpr readIntExpr) {
+        /** TODO:
         if (getExprValue(readIntExpr) == null) {
             return AstErrorHandler.ErrorCode.FAILED_STDIN_READ;
         }
+        */
         return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
     public AstErrorHandler.ErrorCode checkReadFloatExpr(ReadFloatExpr readFloatExpr) {
+        /** TODO:
         if (getExprValue(readFloatExpr) == null) {
             return AstErrorHandler.ErrorCode.FAILED_STDIN_READ;
         }
+        */
         return AstErrorHandler.ErrorCode.SUCCESS;
     }
 
@@ -487,9 +369,10 @@ public final class TypeCheck {
 
     public AstErrorHandler.ErrorCode checkAssignStmt(AssignStmt assignStmt) {
         // Validate
-        ValueMeta meta = findValue(assignStmt.ident);
-        if (meta == null) {
-            return AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR;
+        // ValueMeta meta = findValue(assignStmt.ident);
+        // if (meta == null) {
+        if (!typeHelper.isDeclared(assignStmt.ident)) {
+            return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
 
         // if (!checkExpr(assignStmt.expr)) {
@@ -498,14 +381,15 @@ public final class TypeCheck {
             return code;
         }
 
+        ValueMeta.ValueType identType = typeHelper.getType(assignStmt.ident);
         ValueMeta.ValueType exprType = typeHelper.getExprType(assignStmt.expr);
-        if (meta.getType() != exprType) {
+        if (identType != exprType) {
             return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
 
         // Update
         // ValueMeta value = getExprValue(assignStmt.expr).copyWithIdent(assignStmt.ident);
-        putValue(assignStmt.ident, ValueMeta.createZero(assignStmt.ident, meta.getType()));
+        putValue(assignStmt.ident, ValueMeta.createZero(assignStmt.ident, identType));
 
         return AstErrorHandler.ErrorCode.SUCCESS;
     }
@@ -518,6 +402,7 @@ public final class TypeCheck {
         }
 
         ValueMeta.ValueType type = typeHelper.getExprType(printStmt.expr);
+        /**
         if (type == ValueMeta.ValueType.INT) {
             System.out.println(getExprValue(printStmt.expr).getIntValue());
         } else if (type == ValueMeta.ValueType.FLOAT) {
@@ -525,6 +410,7 @@ public final class TypeCheck {
         } else {
             return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
         }
+        */
 
         return AstErrorHandler.ErrorCode.SUCCESS;
     }

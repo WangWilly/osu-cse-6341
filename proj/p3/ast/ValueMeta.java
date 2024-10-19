@@ -111,6 +111,21 @@ public final class ValueMeta {
 
     ////////////////////////////////////////////////////////////////////////////
 
+    public String toString() {
+        if (type == ValueType.INT) {
+            return ident + " (int): " + intValue;
+        }
+        if (type == ValueType.FLOAT) {
+            return ident + " (float): " + floatValue;
+        }
+        if (type == ValueType.BOOL) {
+            return ident + " (bool): " + boolValue;
+        }
+        return ident + " (undefined)";
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+
     public ValueMeta copyWithIdent(String ident) {
         return new ValueMeta(ident, this.type, this.intValue, this.floatValue, this.boolValue);
     }

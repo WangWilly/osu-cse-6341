@@ -24,16 +24,6 @@ public class TypeHelper {
         return null;
     }
 
-    private boolean hasIdent(String ident) {
-        for (int i = this.symbolTables.size() - 1; i >= 0; i--) {
-            if (!this.symbolTables.get(i).containsKey(ident)) {
-                continue;
-            }
-            return true;
-        }
-        return false;
-    }
-
     /**
     private ValueMeta getValidValue(String ident) {
         ValueMeta refer = getValue(ident);
@@ -43,6 +33,34 @@ public class TypeHelper {
         return refer;
     }
     */
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    public boolean hasValue(String ident) {
+        return findValue(ident) != null;
+    }
+
+    public ValueMeta.ValueType getType(String ident) {
+        ValueMeta value = findValue(ident);
+        if (value == null) {
+            return ValueMeta.ValueType.UNDEFINED;
+        }
+        return value.getType();
+    }
+
+    public boolean isLocalDeclared(String ident) {
+        return symbolTables.peek().containsKey(ident);
+    }
+
+    public boolean isDeclared(String ident) {
+        for (int i = this.symbolTables.size() - 1; i >= 0; i--) {
+            if (!this.symbolTables.get(i).containsKey(ident)) {
+                continue;
+            }
+            return true;
+        }
+        return false;
+    }
 
     ////////////////////////////////////////////////////////////////////////////
     // Decl
