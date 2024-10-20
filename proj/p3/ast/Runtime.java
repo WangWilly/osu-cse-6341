@@ -74,10 +74,6 @@ public final class Runtime {
     // Expr
 
     public RuntimeMeta runExpr(Expr expr) {
-        if (exprCache.containsKey(expr)) {
-            return exprCache.get(expr);
-        }
-
         RuntimeMeta resValue = null;
         if (expr instanceof IntConstExpr) {
             resValue = runIntConstExpr((IntConstExpr) expr);
@@ -105,7 +101,6 @@ public final class Runtime {
         if (resValue == null) {
             throw new RuntimeException("Expression is not valid");
         }
-        exprCache.put(expr, resValue);
         return resValue;
     }
 
@@ -145,6 +140,10 @@ public final class Runtime {
     }
 
     public RuntimeMeta runReadIntExpr(ReadIntExpr readIntExpr) {
+        if (exprCache.containsKey((Expr)readIntExpr)) {
+            return exprCache.get((Expr)readIntExpr);
+        }
+
         if (injectedValues == null || injectedValues.isEmpty()) {
             return RuntimeMeta.createError(AstErrorHandler.ErrorCode.FAILED_STDIN_READ);
         }
@@ -155,10 +154,15 @@ public final class Runtime {
 
         ValueMeta value = injectedValues.poll();
         RuntimeMeta resStatus = RuntimeMeta.createSuccess(value);
+        exprCache.put((Expr)readIntExpr, resStatus);
         return resStatus;
     }
 
     public RuntimeMeta runReadFloatExpr(ReadFloatExpr readFloatExpr) {
+        if (exprCache.containsKey((Expr)readFloatExpr)) {
+            return exprCache.get((Expr)readFloatExpr);
+        }
+
         if (injectedValues == null || injectedValues.isEmpty()) {
             return null;
         }
@@ -169,16 +173,13 @@ public final class Runtime {
 
         ValueMeta value = injectedValues.poll();
         RuntimeMeta resStatus = RuntimeMeta.createSuccess(value);
+        exprCache.put((Expr)readFloatExpr, resStatus);
         return resStatus;
     }
 
     ////////////////////////////////////////////////////////////////////////////
 
     public RuntimeMeta runBinaryExpr(BinaryExpr binExpr) {
-        if (exprCache.containsKey((Expr)binExpr)) {
-            return exprCache.get((Expr)binExpr);
-        }
-
         RuntimeMeta leftStatus = runExpr(binExpr.expr1);
         if (leftStatus == null) {
             throw new RuntimeException("BinaryExpr is not valid");
@@ -215,7 +216,6 @@ public final class Runtime {
         if (resStatus == null) {
             throw new RuntimeException("BinaryExpr is not valid");
         }
-        exprCache.put(binExpr, resStatus);
         return resStatus;
     }
 
@@ -536,7 +536,7 @@ public final class Runtime {
         }
 
         ValueMeta value = resStatus.getValue().copyWithIdent(assignStmt.ident);
-        stHelper.concreteIdent(assignStmt.ident, value.getType());
+        stHelper.envalue(assignStmt.ident, value);
         return RuntimeMeta.createSuccess(null);
     }
 
