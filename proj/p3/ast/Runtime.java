@@ -28,6 +28,7 @@ public final class Runtime {
             return RuntimeMeta.createSuccess(null);
         }
 
+        runVarDecl(decl.varDecl);
         RuntimeMeta refer = runExpr(decl.expr);
         if (refer == null) {
             throw new RuntimeException("Expression is not valid");
@@ -79,20 +80,13 @@ public final class Runtime {
 
         RuntimeMeta resValue = null;
         if (expr instanceof IntConstExpr) {
-            IntConstExpr intConstExpr = (IntConstExpr) expr;
-            resValue = RuntimeMeta.createSuccess(ValueMeta.createInt(null, intConstExpr.ival));
+            resValue = runIntConstExpr((IntConstExpr) expr);
         }
         if (expr instanceof FloatConstExpr) {
-            FloatConstExpr floatConstExpr = (FloatConstExpr) expr;
-            resValue = RuntimeMeta.createSuccess(ValueMeta.createFloat(null, floatConstExpr.fval));
+            resValue = runFloatConstExpr((FloatConstExpr) expr);
         }
         if (expr instanceof IdentExpr) {
-            IdentExpr identExpr = (IdentExpr) expr;
-            ValueMeta val = stHelper.findValue(identExpr.ident);
-            if (val == null) {
-                throw new RuntimeException("Variable " + identExpr.ident + " not declared");
-            }
-            resValue = RuntimeMeta.createSuccess(val);
+            resValue = runIdentExpr((IdentExpr) expr);
         }
         if (expr instanceof BinaryExpr) {
             BinaryExpr binExpr = (BinaryExpr) expr;
@@ -115,6 +109,23 @@ public final class Runtime {
         return resValue;
     }
 
+    public RuntimeMeta runIntConstExpr(IntConstExpr intConstExpr) {
+        return RuntimeMeta.createSuccess(ValueMeta.createInt(null, intConstExpr.ival));
+    }
+
+    public RuntimeMeta runFloatConstExpr(FloatConstExpr floatConstExpr) {
+        return RuntimeMeta.createSuccess(ValueMeta.createFloat(null, floatConstExpr.fval));
+    }
+
+    public RuntimeMeta runIdentExpr(IdentExpr identExpr) {
+        ValueMeta val = stHelper.findValue(identExpr.ident);
+        if (val == null) {
+            // return RuntimeMeta.createError(AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR);
+            throw new RuntimeException("Variable " + identExpr.ident + " not declared");
+        }
+        return RuntimeMeta.createSuccess(val);
+    }
+
     public RuntimeMeta runUnaryMinusExpr(UnaryMinusExpr unaryMinusExpr) {
         RuntimeMeta resStatus = runExpr(unaryMinusExpr.expr);
         if (resStatus == null) {
@@ -133,7 +144,7 @@ public final class Runtime {
         throw new RuntimeException("UnaryMinusExpr is not valid");
     }
 
-    private RuntimeMeta runReadIntExpr(ReadIntExpr readIntExpr) {
+    public RuntimeMeta runReadIntExpr(ReadIntExpr readIntExpr) {
         if (injectedValues == null || injectedValues.isEmpty()) {
             return RuntimeMeta.createError(AstErrorHandler.ErrorCode.FAILED_STDIN_READ);
         }
@@ -144,11 +155,10 @@ public final class Runtime {
 
         ValueMeta value = injectedValues.poll();
         RuntimeMeta resStatus = RuntimeMeta.createSuccess(value);
-        exprCache.put((Expr)readIntExpr, resStatus);
         return resStatus;
     }
 
-    private RuntimeMeta runReadFloatExpr(ReadFloatExpr readFloatExpr) {
+    public RuntimeMeta runReadFloatExpr(ReadFloatExpr readFloatExpr) {
         if (injectedValues == null || injectedValues.isEmpty()) {
             return null;
         }
@@ -159,7 +169,6 @@ public final class Runtime {
 
         ValueMeta value = injectedValues.poll();
         RuntimeMeta resStatus = RuntimeMeta.createSuccess(value);
-        exprCache.put((Expr)readFloatExpr, resStatus);
         return resStatus;
     }
 
@@ -243,13 +252,13 @@ public final class Runtime {
     private RuntimeMeta runDiv(ValueMeta left, ValueMeta right) {
         if (left.getType() == ValueMeta.ValueType.INT && right.getType() == ValueMeta.ValueType.INT) {
             if (right.getIntValue() == 0) {
-                RuntimeMeta.createError(AstErrorHandler.ErrorCode.DIV_BY_ZERO_ERROR);
+                return RuntimeMeta.createError(AstErrorHandler.ErrorCode.DIV_BY_ZERO_ERROR);
             }
             return RuntimeMeta.createSuccess(ValueMeta.createInt(null, left.getIntValue() / right.getIntValue()));
         }
         if (left.getType() == ValueMeta.ValueType.FLOAT && right.getType() == ValueMeta.ValueType.FLOAT) {
             if (right.getFloatValue() == 0.0) {
-                RuntimeMeta.createError(AstErrorHandler.ErrorCode.DIV_BY_ZERO_ERROR);
+                return RuntimeMeta.createError(AstErrorHandler.ErrorCode.DIV_BY_ZERO_ERROR);
             }
             return RuntimeMeta.createSuccess(ValueMeta.createFloat(null, left.getFloatValue() / right.getFloatValue()));
         }
@@ -271,9 +280,18 @@ public final class Runtime {
 
     public RuntimeMeta runCompExpr(CompExpr compExpr) {
         RuntimeMeta left = runExpr(compExpr.expr1);
-        RuntimeMeta right = runExpr(compExpr.expr2);
-        if (left == null || right == null) {
+        if (left == null) {
             throw new RuntimeException("CompExpr is not valid");
+        }
+        if (!left.isSuccessful()) {
+            return left;
+        }
+        RuntimeMeta right = runExpr(compExpr.expr2);
+        if (right == null) {
+            throw new RuntimeException("CompExpr is not valid");
+        }
+        if (!right.isSuccessful()) {
+            return right;
         }
 
         if (compExpr.op == CompExpr.EQ) {
@@ -311,7 +329,13 @@ public final class Runtime {
             return RuntimeMeta.createSuccess(ValueMeta.createBool(null, !resStatus.getValue().getBoolValue().booleanValue()));
         }
 
+        /** 
+         * Short-circuit evaluation
+         * 
+         * If the first expression is false, the second expression is not evaluated.
+         */
         if (logicalExpr.op == LogicalExpr.AND) {
+            /**
             RuntimeMeta left = runCondExpr(logicalExpr.expr1);
             if (left == null) {
                 throw new RuntimeException("LogicalExpr is not valid");
@@ -336,9 +360,36 @@ public final class Runtime {
             }
 
             return RuntimeMeta.createSuccess(ValueMeta.createBool(null, true));
+            */
+
+            RuntimeMeta left = runCondExpr(logicalExpr.expr1);
+            if (left == null) {
+                throw new RuntimeException("LogicalExpr is not valid");
+            }
+            if (!left.isSuccessful()) {
+                return left;
+            }
+            RuntimeMeta right = runCondExpr(logicalExpr.expr2);
+            if (right == null) {
+                throw new RuntimeException("LogicalExpr is not valid");
+            }
+            if (!right.isSuccessful()) {
+                return right;
+            }
+
+            if (!left.getValue().getBoolValue().booleanValue()) {
+                return RuntimeMeta.createSuccess(ValueMeta.createBool(null, false));
+            }
+
+            if (!right.getValue().getBoolValue().booleanValue()) {
+                return RuntimeMeta.createSuccess(ValueMeta.createBool(null, false));
+            }
+
+            return RuntimeMeta.createSuccess(ValueMeta.createBool(null, true));
         }
 
         if (logicalExpr.op == LogicalExpr.OR) {
+            /**
             RuntimeMeta left = runCondExpr(logicalExpr.expr1);
             if (left == null) {
                 throw new RuntimeException("LogicalExpr is not valid");
@@ -357,6 +408,32 @@ public final class Runtime {
             }
             if (!right.isSuccessful()) {
                 return right;
+            }
+
+            if (right.getValue().getBoolValue().booleanValue()) {
+                return RuntimeMeta.createSuccess(ValueMeta.createBool(null, true));
+            }
+
+            return RuntimeMeta.createSuccess(ValueMeta.createBool(null, false));
+            */
+
+            RuntimeMeta left = runCondExpr(logicalExpr.expr1);
+            if (left == null) {
+                throw new RuntimeException("LogicalExpr is not valid");
+            }
+            if (!left.isSuccessful()) {
+                return left;
+            }
+            RuntimeMeta right = runCondExpr(logicalExpr.expr2);
+            if (right == null) {
+                throw new RuntimeException("LogicalExpr is not valid");
+            }
+            if (!right.isSuccessful()) {
+                return right;
+            }
+
+            if (left.getValue().getBoolValue().booleanValue()) {
+                return RuntimeMeta.createSuccess(ValueMeta.createBool(null, true));
             }
 
             if (right.getValue().getBoolValue().booleanValue()) {

@@ -22,4 +22,8 @@ public class PrintStmt extends Stmt {
     public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkPrintStmt(this);
     }
+
+    public RuntimeMeta run(Runtime runtime) {
+        return runtime.runPrintStmt(this);
+    }
 }

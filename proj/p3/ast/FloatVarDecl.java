@@ -13,4 +13,8 @@ public class FloatVarDecl extends VarDecl {
     public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkFloatVarDecl(this);
     }
+
+    public RuntimeMeta run(Runtime runtime) {
+        return runtime.runFloatVarDecl(this);
+    }
 }

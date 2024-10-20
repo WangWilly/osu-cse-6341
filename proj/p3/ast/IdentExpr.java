@@ -16,4 +16,8 @@ public class IdentExpr extends Expr {
     public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkIdentExpr(this);
     }
+
+    public RuntimeMeta run(Runtime runtime) {
+        return runtime.runIdentExpr(this);
+    }
 }

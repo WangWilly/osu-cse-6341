@@ -24,4 +24,8 @@ public class AssignStmt extends Stmt {
     public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkAssignStmt(this);
     }
+
+    public RuntimeMeta run(Runtime runtime) {
+        return runtime.runAssignStmt(this);
+    }
 }

@@ -15,4 +15,8 @@ public class Program extends ASTNode {
     public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return unitList.checkType(tc);
     }
+
+    public RuntimeMeta run(Runtime runtime) {
+        return unitList.run(runtime);
+    }
 }

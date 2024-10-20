@@ -37,4 +37,8 @@ public class IfStmt extends Stmt {
 	public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
 		return tc.checkIfStmt(this);
 	}
+
+    public RuntimeMeta run(Runtime runtime) {
+        return runtime.runIfStmt(this);
+    }
 }

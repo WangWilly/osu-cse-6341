@@ -127,15 +127,18 @@ public final class ValueMeta {
     public void print() {
         if (type == ValueType.INT && intValue != null) {
             System.out.println(intValue);
+            return;
         }
         if (type == ValueType.FLOAT && floatValue != null) {
             System.out.println(floatValue);
+            return;
         }
         if (type == ValueType.BOOL && boolValue != null) {
             System.out.println(boolValue);
+            return;
         }
 
-        throw new RuntimeException("ValueMeta: print() called on UNDEFINED type");
+        throw new RuntimeException("ValueMeta: " + toString() + " is not printable");
     }
 
     ////////////////////////////////////////////////////////////////////////////

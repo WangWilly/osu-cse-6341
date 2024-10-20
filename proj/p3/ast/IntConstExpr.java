@@ -16,4 +16,8 @@ public class IntConstExpr extends Expr {
     public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkIntConstExpr(this);
     }
+
+    public RuntimeMeta run(Runtime runtime) {
+        return runtime.runIntConstExpr(this);
+    }
 }

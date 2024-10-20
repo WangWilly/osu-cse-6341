@@ -13,4 +13,8 @@ public class IntVarDecl extends VarDecl {
     public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkIntVarDecl(this);
     }
+
+    public RuntimeMeta run(Runtime runtime) {
+        return runtime.runIntVarDecl(this);
+    }
 }

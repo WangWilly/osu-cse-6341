@@ -39,4 +39,8 @@ public class LogicalExpr extends CondExpr {
     public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkLogicalExpr(this);
     }
+
+    public RuntimeMeta run(Runtime runtime) {
+        return runtime.runLogicalExpr(this);
+    }
 }

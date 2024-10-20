@@ -13,4 +13,8 @@ public class ReadFloatExpr extends Expr {
     public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkReadFloatExpr(this);
     }
+
+    public RuntimeMeta run(Runtime runtime) {
+        return runtime.runReadFloatExpr(this);
+    }
 }

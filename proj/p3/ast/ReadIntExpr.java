@@ -13,4 +13,8 @@ public class ReadIntExpr extends Expr {
     public AstErrorHandler.ErrorCode checkType(TypeCheck tc) {
         return tc.checkReadIntExpr(this);
     }
+
+    public RuntimeMeta run(Runtime runtime) {
+        return runtime.runReadIntExpr(this);
+    }
 }
