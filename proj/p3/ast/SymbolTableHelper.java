@@ -27,6 +27,16 @@ public class SymbolTableHelper {
         return null;
     }
 
+    public ValueMeta findPlaned(String ident) {
+        for (int i = this.symbolTables.size() - 1; i >= 0; i--) {
+            if (!this.symbolTables.get(i).containsKey(ident)) {
+                continue;
+            }
+            return this.symbolTables.get(i).get(ident);
+        }
+        return null;
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Ident control (w/o value)
 
@@ -70,13 +80,8 @@ public class SymbolTableHelper {
     }
 
     public boolean isPlaned(String ident) {
-        for (int i = this.symbolTables.size() - 1; i >= 0; i--) {
-            if (!this.symbolTables.get(i).containsKey(ident)) {
-                continue;
-            }
-            return true;
-        }
-        return false;
+        ValueMeta value = findPlaned(ident);
+        return value != null;
     }
 
     public boolean isConcreted(String ident) {
@@ -86,7 +91,7 @@ public class SymbolTableHelper {
     ////////////////////////////////////////////////////////////////////////////
 
     public ValueMeta.ValueType getType(String ident) {
-        ValueMeta value = findValue(ident);
+        ValueMeta value = findPlaned(ident);
         if (value == null) {
             return ValueMeta.ValueType.UNDEFINED;
         }

@@ -43,17 +43,25 @@ public class Interpreter {
         // astRoot.print(System.out);
 
         // for ReadIntExpr, ReadFloatExpr
-        Scanner s = new Scanner(System.in);
         Queue<ValueMeta> values = new LinkedList<>();
-        while (s.hasNext()) {
-            if (s.hasNextInt()) {
-                values.add(ValueMeta.createInt(null, Long.valueOf(s.nextInt())));
-            } else if (s.hasNextFloat()) {
-                values.add(ValueMeta.createFloat(null, Double.valueOf(s.nextFloat())));
-            } else {
-                Interpreter.fatalError("Failed to read from stdin", EXIT_FAILED_STDIN_READ);
+        try {
+            if (System.in.available() != 0) {
+                Scanner s = new Scanner(System.in);
+                while (s.hasNext()) {
+                    if (s.hasNextInt()) {
+                        values.add(ValueMeta.createInt(null, Long.valueOf(s.nextInt())));
+                    } else if (s.hasNextFloat()) {
+                        values.add(ValueMeta.createFloat(null, Double.valueOf(s.nextFloat())));
+                    } else {
+                        Interpreter.fatalError("Failed to read from stdin", EXIT_FAILED_STDIN_READ);
+                    }
+                }
+                s.close();
             }
+        } catch (IOException ex) {
+            // do nothing
         }
+
 
         // type checking. If the program does not typecheck,
         // call fatalError with return code EXIT_STATIC_CHECKING_ERROR
