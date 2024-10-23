@@ -53,7 +53,7 @@ public class Interpreter {
                     } else if (s.hasNextFloat()) {
                         values.add(ValueMeta.createFloat(null, Double.valueOf(s.nextFloat())));
                     } else {
-                        Interpreter.fatalError("Failed to read from stdin", EXIT_FAILED_STDIN_READ);
+                        throw new RuntimeException("Invalid input");
                     }
                 }
                 s.close();

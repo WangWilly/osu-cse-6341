@@ -9,4 +9,6 @@ cd $project3_dir
 
 if [ "$#" -eq 2 ]; then
     ./plan $1 < $2
+else
+    ./plan $1
 fi
