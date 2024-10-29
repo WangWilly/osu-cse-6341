@@ -7,6 +7,7 @@ import ast.TypeCheck;
 import ast.ValueMeta;
 import ast.RuntimeMeta;
 import ast.RealRuntime;
+import ast.AbstRuntime;
 import java.io.*;
 import java.util.*;
 import java.util.Scanner;
@@ -42,6 +43,7 @@ public class Interpreter {
         // for debugging
         // astRoot.print(System.out);
 
+        /**
         // for ReadIntExpr, ReadFloatExpr
         Queue<ValueMeta> values = new LinkedList<>();
         try {
@@ -61,6 +63,7 @@ public class Interpreter {
         } catch (IOException ex) {
             // do nothing
         }
+        */
 
 
         // type checking. If the program does not typecheck,
@@ -81,6 +84,7 @@ public class Interpreter {
             }
         }
 
+        /**
         // run the program
         Stack<Map<String,ValueMeta>> symbolTablesRun = new Stack<Map<String,ValueMeta>>();
         SymbolTableHelper symbolTableHelperRun = new SymbolTableHelper(symbolTablesRun);
@@ -100,7 +104,27 @@ public class Interpreter {
                 Interpreter.fatalError("Uninitialized variable error", EXIT_UNINITIALIZED_VAR_ERROR);
             }
         }
+        */
 
+        // run the program w/ AbstRuntime
+        Stack<Map<String,ValueMeta>> symbolTablesRun = new Stack<Map<String,ValueMeta>>();
+        SymbolTableHelper symbolTableHelperRun = new SymbolTableHelper(symbolTablesRun);
+        AbstRuntime runtime = new AbstRuntime(symbolTableHelperRun);
+        RuntimeMeta runtimeMeta = astRoot.run(runtime);
+        if (runtimeMeta == null) {
+            throw new RuntimeException("Failed to run the program");
+        }
+        if (!runtimeMeta.isSuccessful()) {
+            if (runtimeMeta.getErrorCode() == AstErrorHandler.ErrorCode.FAILED_STDIN_READ) {
+                Interpreter.fatalError("Failed to read from stdin", EXIT_FAILED_STDIN_READ);
+            }
+            if (runtimeMeta.getErrorCode() == AstErrorHandler.ErrorCode.DIV_BY_ZERO_ERROR) {
+                Interpreter.fatalError("Division by zero error", EXIT_DIV_BY_ZERO_ERROR);
+            }
+            if (runtimeMeta.getErrorCode() == AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR) {
+                Interpreter.fatalError("Uninitialized variable error", EXIT_UNINITIALIZED_VAR_ERROR);
+            }
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////

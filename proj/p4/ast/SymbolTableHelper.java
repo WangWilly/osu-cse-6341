@@ -265,7 +265,7 @@ public class SymbolTableHelper {
     public boolean hasIdenticalVal(SymbolTableHelper twin) {
         for (Map<String, ValueMeta> symbolTable : symbolTables) {
             for (Map.Entry<String, ValueMeta> entry : symbolTable.entrySet()) {
-                if (!twin.isConcreted(entry.getKey()) || !entry.getValue().equals(twin.findValue(entry.getKey()))) {    
+                if (!twin.isConcreted(entry.getKey()) || !ValueMeta.equals(entry.getValue(), twin.findValue(entry.getKey()))) {
                     return false;
                 }
             }
