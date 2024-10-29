@@ -1,9 +1,29 @@
 package ast;
+import java.util.HashMap;
 
 public final class ValueMeta {
     public enum ValueType {
-        BOOL, INT, FLOAT, UNDEFINED
+        BOOL,
+        INT,
+        FLOAT,
+        UNDEFINED,
+        ABST_INT,
+        ABST_FLOAT,
     }
+
+    public enum AbstValue {
+        ILLEGAL,
+        POS_INT,
+        NEG_INT,
+        ZERO_INT,
+        ANY_INT,
+        POS_FLOAT,
+        NEG_FLOAT,
+        ZERO_FLOAT,
+        ANY_FLOAT,
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
 
     private String ident;
     private ValueType type;
@@ -11,64 +31,67 @@ public final class ValueMeta {
     private Double floatValue;
     private Boolean boolValue;
 
-    /**
-    public ValueMeta(String ident, ValueType type) {
-        this.ident = ident;
-        this.type = type;
-    }
+    private AbstValue abstValue;
 
-    public ValueMeta(String ident, ValueType type, Long intValue) {
-        this.ident = ident;
-        this.type = type;
-        this.intValue = intValue;
-    }
-
-    public ValueMeta(String ident, ValueType type, Double floatValue) {
-        this.ident = ident;
-        this.type = type;
-        this.floatValue = floatValue;
-    }
-    */
-
-    private ValueMeta(String ident, ValueType type, Long intValue, Double floatValue, Boolean boolValue) {
+    private ValueMeta(String ident, ValueType type, Long intValue, Double floatValue, Boolean boolValue, AbstValue abstValue) {
         this.ident = ident;
         this.type = type;
         this.intValue = intValue;
         this.floatValue = floatValue;
         this.boolValue = boolValue;
+
+        this.abstValue = abstValue;
     }
 
+    ////////////////////////////////////////////////////////////////////////////
+
     public static ValueMeta createNull(String ident, ValueType type) {
-        return new ValueMeta(ident, type, null, null, null);
+        return new ValueMeta(ident, type, null, null, null, null);
     }
 
     public static ValueMeta createZero(String ident, ValueType type) {
         // dummy value
         if (type == ValueType.INT) {
-            return new ValueMeta(ident, type, Long.valueOf(0), null, null);
+            return new ValueMeta(ident, type, Long.valueOf(0), null, null, null);
         }
         if (type == ValueType.FLOAT) {
-            return new ValueMeta(ident, type, null, Double.valueOf(0.0), null);
+            return new ValueMeta(ident, type, null, Double.valueOf(0.0), null, null);
         }
         if (type == ValueType.BOOL) {
-            return new ValueMeta(ident, type, null, null, Boolean.FALSE);
+            return new ValueMeta(ident, type, null, null, Boolean.FALSE, null);
+        }
+        if (type == ValueType.ABST_INT) {
+            return new ValueMeta(ident, type, null, null, null, AbstValue.ZERO_INT);
+        }
+        if (type == ValueType.ABST_FLOAT) {
+            return new ValueMeta(ident, type, null, null, null, AbstValue.ZERO_FLOAT);
         }
 
         throw new RuntimeException("ValueMeta: createZero() called on UNDEFINED type");
     }
 
     public static ValueMeta createInt(String ident, Long intValue) {
-        ValueMeta value = new ValueMeta(ident, ValueType.INT, intValue, null, null);
+        ValueMeta value = new ValueMeta(ident, ValueType.INT, intValue, null, null, null);
         return value;
     }
 
     public static ValueMeta createFloat(String ident, Double floatValue) {
-        ValueMeta value = new ValueMeta(ident, ValueType.FLOAT, null, floatValue, null);
+        ValueMeta value = new ValueMeta(ident, ValueType.FLOAT, null, floatValue, null, null);
         return value;
     }
 
     public static ValueMeta createBool(String ident, Boolean boolValue) {
-        ValueMeta value = new ValueMeta(ident, ValueType.BOOL, null, null, boolValue);
+        ValueMeta value = new ValueMeta(ident, ValueType.BOOL, null, null, boolValue, null);
+        return value;
+    }
+
+    public static ValueMeta createAbstInt(String ident, AbstValue abstValue) {
+        ValueMeta value = new ValueMeta(ident, ValueType.ABST_INT, null, null, null, abstValue);
+        return value;
+    }
+
+    public static ValueMeta createAbstFloat(String ident, AbstValue abstValue) {
+        ValueMeta value = new ValueMeta(ident, ValueType.ABST_FLOAT, null, null, null, abstValue);
         return value;
     }
 
@@ -105,8 +128,22 @@ public final class ValueMeta {
         return boolValue;
     }
 
+    public AbstValue getAbstIntValue() {
+        if (type != ValueType.ABST_INT) {
+            throw new RuntimeException("ValueMeta: getAbstIntValue() called on non-ABST_INT type");
+        }
+        return abstValue;
+    }
+
+    public AbstValue getAbstFloatValue() {
+        if (type != ValueType.ABST_FLOAT) {
+            throw new RuntimeException("ValueMeta: getAbstFloatValue() called on non-ABST_FLOAT type");
+        }
+        return abstValue;
+    }
+
     public boolean hasValue() {
-        return intValue != null || floatValue != null || boolValue != null;
+        return intValue != null || floatValue != null || boolValue != null || abstValue != null;
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -120,6 +157,12 @@ public final class ValueMeta {
         }
         if (type == ValueType.BOOL) {
             return ident + " (bool): " + boolValue;
+        }
+        if (type == ValueType.ABST_INT) {
+            return ident + " (abst_int): " + abstValue;
+        }
+        if (type == ValueType.ABST_FLOAT) {
+            return ident + " (abst_float): " + abstValue;
         }
         return ident + " (undefined)";
     }
@@ -137,6 +180,14 @@ public final class ValueMeta {
             System.out.println(boolValue);
             return;
         }
+        if (type == ValueType.ABST_INT && abstValue != null) {
+            System.out.println(abstValue);
+            return;
+        }
+        if (type == ValueType.ABST_FLOAT && abstValue != null) {
+            System.out.println(abstValue);
+            return;
+        }
 
         throw new RuntimeException("ValueMeta: " + toString() + " is not printable");
     }
@@ -144,11 +195,12 @@ public final class ValueMeta {
     ////////////////////////////////////////////////////////////////////////////
 
     public ValueMeta copyWithIdent(String ident) {
-        return new ValueMeta(ident, this.type, this.intValue, this.floatValue, this.boolValue);
+        return new ValueMeta(ident, this.type, this.intValue, this.floatValue, this.boolValue, this.abstValue);
     }
 
     ////////////////////////////////////////////////////////////////////////////
 
+    // TODO:
     public static boolean equals(ValueMeta left, ValueMeta right) {
         if (left == null || right == null) {
             throw new RuntimeException("ValueMeta: equals() called on null");
@@ -219,5 +271,383 @@ public final class ValueMeta {
 
     public static boolean greaterThanOrEqual(ValueMeta left, ValueMeta right) {
         return greaterThan(left, right) || equals(left, right);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    private static HashMap<AbstValue, HashMap<AbstValue, AbstValue>> addTable = new HashMap<AbstValue, HashMap<AbstValue, AbstValue>>() {{
+        // ABST_INT
+        put(AbstValue.POS_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.POS_INT);
+            put(AbstValue.NEG_INT, AbstValue.ANY_INT);
+            put(AbstValue.ZERO_INT, AbstValue.POS_INT);
+            put(AbstValue.ANY_INT, AbstValue.ANY_INT);
+        }});
+        put(AbstValue.NEG_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ANY_INT);
+            put(AbstValue.NEG_INT, AbstValue.NEG_INT);
+            put(AbstValue.ZERO_INT, AbstValue.NEG_INT);
+            put(AbstValue.ANY_INT, AbstValue.ANY_INT);
+        }});
+        put(AbstValue.ZERO_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.POS_INT);
+            put(AbstValue.NEG_INT, AbstValue.NEG_INT);
+            put(AbstValue.ZERO_INT, AbstValue.ZERO_INT);
+            put(AbstValue.ANY_INT, AbstValue.ANY_INT);
+        }});
+        put(AbstValue.ANY_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ANY_INT);
+            put(AbstValue.NEG_INT, AbstValue.ANY_INT);
+            put(AbstValue.ZERO_INT, AbstValue.ANY_INT);
+            put(AbstValue.ANY_INT, AbstValue.ANY_INT);
+        }});
+        // ABST_FLOAT
+        put(AbstValue.POS_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.POS_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.ZERO_FLOAT, AbstValue.POS_FLOAT);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_FLOAT);
+        }});
+        put(AbstValue.NEG_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.NEG_FLOAT);
+            put(AbstValue.ZERO_FLOAT, AbstValue.NEG_FLOAT);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_FLOAT);
+        }});
+        put(AbstValue.ZERO_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.POS_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.NEG_FLOAT);
+            put(AbstValue.ZERO_FLOAT, AbstValue.ZERO_FLOAT);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_FLOAT);
+        }});
+        put(AbstValue.ANY_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.ZERO_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_FLOAT);
+        }});
+    }};
+
+    public static ValueMeta add(ValueMeta left, ValueMeta right) {
+        if (left == null || right == null) {
+            throw new RuntimeException("ValueMeta: add() called on null");
+        }
+
+        if (left.getType() != right.getType()) {
+            throw new RuntimeException("ValueMeta: add() called on different types");
+        }
+
+        if (left.getType() == ValueType.INT) {
+            return ValueMeta.createInt(null, left.getIntValue() + right.getIntValue());
+        }
+        if (left.getType() == ValueType.FLOAT) {
+            return ValueMeta.createFloat(null, left.getFloatValue() + right.getFloatValue());
+        }
+        if (left.getType() == ValueType.ABST_INT && addTable.containsKey(left.abstValue) && addTable.get(left.abstValue).containsKey(right.abstValue)) {
+            return ValueMeta.createAbstInt(null, addTable.get(left.abstValue).get(right.abstValue));
+        }
+        if (left.getType() == ValueType.ABST_FLOAT && addTable.containsKey(left.abstValue) && addTable.get(left.abstValue).containsKey(right.abstValue)) {
+            return ValueMeta.createAbstFloat(null, addTable.get(left.abstValue).get(right.abstValue));
+        }
+
+        throw new RuntimeException("ValueMeta: add() called on UNDEFINED type");
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    private static HashMap<AbstValue, HashMap<AbstValue, AbstValue>> subTable = new HashMap<AbstValue, HashMap<AbstValue, AbstValue>>() {{
+        // ABST_INT
+        put(AbstValue.POS_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ANY_INT);
+            put(AbstValue.NEG_INT, AbstValue.POS_INT);
+            put(AbstValue.ZERO_INT, AbstValue.POS_INT);
+            put(AbstValue.ANY_INT, AbstValue.ANY_INT);
+        }});
+        put(AbstValue.NEG_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.NEG_INT);
+            put(AbstValue.NEG_INT, AbstValue.ANY_INT);
+            put(AbstValue.ZERO_INT, AbstValue.NEG_INT);
+            put(AbstValue.ANY_INT, AbstValue.ANY_INT);
+        }});
+        put(AbstValue.ZERO_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ZERO_INT);
+            put(AbstValue.NEG_INT, AbstValue.ZERO_INT);
+            put(AbstValue.ZERO_INT, AbstValue.ZERO_INT);
+            put(AbstValue.ANY_INT, AbstValue.ANY_INT);
+        }});
+        put(AbstValue.ANY_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ANY_INT);
+            put(AbstValue.NEG_INT, AbstValue.ANY_INT);
+            put(AbstValue.ZERO_INT, AbstValue.ANY_INT);
+            put(AbstValue.ANY_INT, AbstValue.ANY_INT);
+        }});
+        // ABST_FLOAT
+        put(AbstValue.POS_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.POS_FLOAT);
+            put(AbstValue.ZERO_FLOAT, AbstValue.POS_FLOAT);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_FLOAT);
+        }});
+        put(AbstValue.NEG_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.NEG_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.ZERO_FLOAT, AbstValue.NEG_FLOAT);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_FLOAT);
+        }});
+        put(AbstValue.ZERO_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ZERO_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.ZERO_FLOAT);
+            put(AbstValue.ZERO_FLOAT, AbstValue.ZERO_FLOAT);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_FLOAT);
+        }});
+        put(AbstValue.ANY_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.ZERO_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_FLOAT);
+        }});
+    }};
+
+    public static ValueMeta sub(ValueMeta left, ValueMeta right) {
+        if (left == null || right == null) {
+            throw new RuntimeException("ValueMeta: sub() called on null");
+        }
+
+        if (left.getType() != right.getType()) {
+            throw new RuntimeException("ValueMeta: sub() called on different types");
+        }
+
+        if (left.getType() == ValueType.INT) {
+            return ValueMeta.createInt(null, left.getIntValue() - right.getIntValue());
+        }
+        if (left.getType() == ValueType.FLOAT) {
+            return ValueMeta.createFloat(null, left.getFloatValue() - right.getFloatValue());
+        }
+        if (left.getType() == ValueType.ABST_INT && subTable.containsKey(left.abstValue) && subTable.get(left.abstValue).containsKey(right.abstValue)) {
+            return ValueMeta.createAbstInt(null, subTable.get(left.abstValue).get(right.abstValue));
+        }
+        if (left.getType() == ValueType.ABST_FLOAT && subTable.containsKey(left.abstValue) && subTable.get(left.abstValue).containsKey(right.abstValue)) {
+            return ValueMeta.createAbstFloat(null, subTable.get(left.abstValue).get(right.abstValue));
+        }
+
+        throw new RuntimeException("ValueMeta: sub() called on UNDEFINED type");
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    private static HashMap<AbstValue, HashMap<AbstValue, AbstValue>> mulTable = new HashMap<AbstValue, HashMap<AbstValue, AbstValue>>() {{
+        // ABST_INT
+        put(AbstValue.POS_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.POS_INT);
+            put(AbstValue.NEG_INT, AbstValue.NEG_INT);
+            put(AbstValue.ZERO_INT, AbstValue.ZERO_INT);
+            put(AbstValue.ANY_INT, AbstValue.ANY_INT);
+        }});
+        put(AbstValue.NEG_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.NEG_INT);
+            put(AbstValue.NEG_INT, AbstValue.POS_INT);
+            put(AbstValue.ZERO_INT, AbstValue.ZERO_INT);
+            put(AbstValue.ANY_INT, AbstValue.ANY_INT);
+        }});
+        put(AbstValue.ZERO_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ZERO_INT);
+            put(AbstValue.NEG_INT, AbstValue.ZERO_INT);
+            put(AbstValue.ZERO_INT, AbstValue.ZERO_INT);
+            put(AbstValue.ANY_INT, AbstValue.ZERO_INT);
+        }});
+        put(AbstValue.ANY_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ANY_INT);
+            put(AbstValue.NEG_INT, AbstValue.ANY_INT);
+            put(AbstValue.ZERO_INT, AbstValue.ZERO_INT);
+            put(AbstValue.ANY_INT, AbstValue.ANY_INT);
+        }});
+        // ABST_FLOAT
+        put(AbstValue.POS_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.POS_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.NEG_FLOAT);
+            put(AbstValue.ZERO_FLOAT, AbstValue.ZERO_FLOAT);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_FLOAT);
+        }});
+        put(AbstValue.NEG_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.NEG_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.POS_FLOAT);
+            put(AbstValue.ZERO_FLOAT, AbstValue.ZERO_FLOAT);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_FLOAT);
+        }});
+        put(AbstValue.ZERO_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ZERO_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.ZERO_FLOAT);
+            put(AbstValue.ZERO_FLOAT, AbstValue.ZERO_FLOAT);
+            put(AbstValue.ANY_FLOAT, AbstValue.ZERO_FLOAT);
+        }});
+        put(AbstValue.ANY_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.ZERO_FLOAT, AbstValue.ZERO_FLOAT);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_FLOAT);
+        }});
+    }};
+
+    public static ValueMeta mul(ValueMeta left, ValueMeta right) {
+        if (left == null || right == null) {
+            throw new RuntimeException("ValueMeta: mul() called on null");
+        }
+
+        if (left.getType() != right.getType()) {
+            throw new RuntimeException("ValueMeta: mul() called on different types");
+        }
+
+        if (left.getType() == ValueType.INT) {
+            return ValueMeta.createInt(null, left.getIntValue() * right.getIntValue());
+        }
+        if (left.getType() == ValueType.FLOAT) {
+            return ValueMeta.createFloat(null, left.getFloatValue() * right.getFloatValue());
+        }
+        if (left.getType() == ValueType.ABST_INT && mulTable.containsKey(left.abstValue) && mulTable.get(left.abstValue).containsKey(right.abstValue)) {
+            return ValueMeta.createAbstInt(null, mulTable.get(left.abstValue).get(right.abstValue));
+        }
+        if (left.getType() == ValueType.ABST_FLOAT && mulTable.containsKey(left.abstValue) && mulTable.get(left.abstValue).containsKey(right.abstValue)) {
+            return ValueMeta.createAbstFloat(null, mulTable.get(left.abstValue).get(right.abstValue));
+        }
+
+        throw new RuntimeException("ValueMeta: mul() called on UNDEFINED type");
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    private static HashMap<AbstValue, HashMap<AbstValue, AbstValue>> divTable = new HashMap<AbstValue, HashMap<AbstValue, AbstValue>>() {{
+        // ABST_INT
+        put(AbstValue.POS_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.POS_INT);
+            put(AbstValue.NEG_INT, AbstValue.NEG_INT);
+            put(AbstValue.ZERO_INT, AbstValue.ILLEGAL);
+            put(AbstValue.ANY_INT, AbstValue.ILLEGAL);
+        }});
+        put(AbstValue.NEG_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.NEG_INT);
+            put(AbstValue.NEG_INT, AbstValue.POS_INT);
+            put(AbstValue.ZERO_INT, AbstValue.ILLEGAL);
+            put(AbstValue.ANY_INT, AbstValue.ILLEGAL);
+        }});
+        put(AbstValue.ZERO_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ZERO_INT);
+            put(AbstValue.NEG_INT, AbstValue.ZERO_INT);
+            put(AbstValue.ZERO_INT, AbstValue.ILLEGAL);
+            put(AbstValue.ANY_INT, AbstValue.ILLEGAL);
+        }});
+        put(AbstValue.ANY_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ANY_INT);
+            put(AbstValue.NEG_INT, AbstValue.ANY_INT);
+            put(AbstValue.ZERO_INT, AbstValue.ILLEGAL);
+            put(AbstValue.ANY_INT, AbstValue.ILLEGAL);
+        }});
+        // ABST_FLOAT
+        put(AbstValue.POS_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.POS_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.NEG_FLOAT);
+            put(AbstValue.ZERO_FLOAT, AbstValue.ILLEGAL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ILLEGAL);
+        }});
+        put(AbstValue.NEG_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.NEG_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.POS_FLOAT);
+            put(AbstValue.ZERO_FLOAT, AbstValue.ILLEGAL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ILLEGAL);
+        }});
+        put(AbstValue.ZERO_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ZERO_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.ZERO_FLOAT);
+            put(AbstValue.ZERO_FLOAT, AbstValue.ILLEGAL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ILLEGAL);
+        }});
+        put(AbstValue.ANY_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.ZERO_FLOAT, AbstValue.ILLEGAL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ILLEGAL);
+        }});
+    }};
+
+    public static ValueMeta div(ValueMeta left, ValueMeta right) {
+        if (left == null || right == null) {
+            throw new RuntimeException("ValueMeta: div() called on null");
+        }
+
+        if (left.getType() != right.getType()) {
+            throw new RuntimeException("ValueMeta: div() called on different types");
+        }
+
+        if (left.getType() == ValueType.INT) { // TODO:
+            return ValueMeta.createInt(null, left.getIntValue() / right.getIntValue());
+        }
+        if (left.getType() == ValueType.FLOAT) { // TODO:
+            return ValueMeta.createFloat(null, left.getFloatValue() / right.getFloatValue());
+        }
+        if (left.getType() == ValueType.ABST_INT && divTable.containsKey(left.abstValue) && divTable.get(left.abstValue).containsKey(right.abstValue)) {
+            return ValueMeta.createAbstInt(null, divTable.get(left.abstValue).get(right.abstValue));
+        }
+        if (left.getType() == ValueType.ABST_FLOAT && divTable.containsKey(left.abstValue) && divTable.get(left.abstValue).containsKey(right.abstValue)) {
+            return ValueMeta.createAbstFloat(null, divTable.get(left.abstValue).get(right.abstValue));
+        }
+
+        throw new RuntimeException("ValueMeta: div() called on UNDEFINED type");
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    // TODO:
+    private static HashMap<AbstValue, HashMap<AbstValue, AbstValue>> mergeTable = new HashMap<AbstValue, HashMap<AbstValue, AbstValue>>() {{
+        // ABST_INT
+        put(AbstValue.POS_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.POS_INT);
+            put(AbstValue.NEG_INT, AbstValue.ANY_INT);
+            put(AbstValue.ZERO_INT, AbstValue.ANY_INT);
+            put(AbstValue.ANY_INT, AbstValue.ANY_INT);
+        }});
+        put(AbstValue.NEG_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ANY_INT);
+            put(AbstValue.NEG_INT, AbstValue.NEG_INT);
+            put(AbstValue.ZERO_INT, AbstValue.ANY_INT);
+            put(AbstValue.ANY_INT, AbstValue.ANY_INT);
+        }});
+        put(AbstValue.ZERO_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ANY_INT);
+            put(AbstValue.NEG_INT, AbstValue.ANY_INT);
+            put(AbstValue.ZERO_INT, AbstValue.ZERO_INT);
+            put(AbstValue.ANY_INT, AbstValue.ANY_INT);
+        }});
+        put(AbstValue.ANY_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ANY_INT);
+            put(AbstValue.NEG_INT, AbstValue.ANY_INT);
+            put(AbstValue.ZERO_INT, AbstValue.ANY_INT);
+            put(AbstValue.ANY_INT, AbstValue.ANY_INT);
+        }});
+        // ABST_FLOAT
+    }};
+
+    // TODO:
+    public static ValueMeta merge(ValueMeta left, ValueMeta right) {
+        if (left == null || right == null) {
+            throw new RuntimeException("ValueMeta: merge() called on null");
+        }
+
+        if (left.getType() != right.getType()) {
+            throw new RuntimeException("ValueMeta: merge() called on different types");
+        }
+
+        if (left.getType() == ValueType.INT) {
+            return ValueMeta.createInt(left.getIdent(), right.getIntValue());
+        }
+        if (left.getType() == ValueType.FLOAT) {
+            return ValueMeta.createFloat(left.getIdent(), right.getFloatValue());
+        }
+        if (left.getType() == ValueType.ABST_INT && mergeTable.containsKey(left.abstValue) && mergeTable.get(left.abstValue).containsKey(right.abstValue)) {
+            return ValueMeta.createAbstInt(left.getIdent(), mergeTable.get(left.abstValue).get(right.abstValue));
+        }
+        if (left.getType() == ValueType.ABST_FLOAT && mergeTable.containsKey(left.abstValue) && mergeTable.get(left.abstValue).containsKey(right.abstValue)) {
+            return ValueMeta.createAbstFloat(left.getIdent(), mergeTable.get(left.abstValue).get(right.abstValue));
+        }
+
+        throw new RuntimeException("ValueMeta: merge() called on UNDEFINED type");
     }
 }
