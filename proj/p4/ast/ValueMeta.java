@@ -253,8 +253,8 @@ public final class ValueMeta {
     }
 
     ////////////////////////////////////////////////////////////////////////////
-
     // TODO:
+
     public static boolean equals(ValueMeta left, ValueMeta right) {
         if (left == null || right == null) {
             throw new RuntimeException("ValueMeta: equals() called on null");
@@ -721,6 +721,30 @@ public final class ValueMeta {
             put(AbstValue.ANY_INT, AbstValue.ANY_INT);
         }});
         // ABST_FLOAT
+        put(AbstValue.POS_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.POS_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.ZERO_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_FLOAT);
+        }});
+        put(AbstValue.NEG_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.NEG_FLOAT);
+            put(AbstValue.ZERO_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_FLOAT);
+        }});
+        put(AbstValue.ZERO_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.ZERO_FLOAT, AbstValue.ZERO_FLOAT);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_FLOAT);
+        }});
+        put(AbstValue.ANY_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.ZERO_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_FLOAT);
+        }});
     }};
 
     // TODO:
