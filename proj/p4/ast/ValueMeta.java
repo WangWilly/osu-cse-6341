@@ -90,9 +90,29 @@ public final class ValueMeta {
         return value;
     }
 
+    public static ValueMeta createAbstInt(String ident, Long intValue) {
+        if (intValue > 0) {
+            return createAbstInt(ident, AbstValue.POS_INT);
+        }
+        if (intValue < 0) {
+            return createAbstInt(ident, AbstValue.NEG_INT);
+        }
+        return createAbstInt(ident, AbstValue.ZERO_INT);
+    }
+
     public static ValueMeta createAbstFloat(String ident, AbstValue abstValue) {
         ValueMeta value = new ValueMeta(ident, ValueType.ABST_FLOAT, null, null, null, abstValue);
         return value;
+    }
+
+    public static ValueMeta createAbstFloat(String ident, Double floatValue) {
+        if (floatValue > 0.0) {
+            return createAbstFloat(ident, AbstValue.POS_FLOAT);
+        }
+        if (floatValue < 0.0) {
+            return createAbstFloat(ident, AbstValue.NEG_FLOAT);
+        }
+        return createAbstFloat(ident, AbstValue.ZERO_FLOAT);
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -146,6 +166,10 @@ public final class ValueMeta {
         return intValue != null || floatValue != null || boolValue != null || abstValue != null;
     }
 
+    public boolean isIllegal() {
+        return abstValue == AbstValue.ILLEGAL;
+    }
+
     ////////////////////////////////////////////////////////////////////////////
 
     public String toString() {
@@ -181,11 +205,41 @@ public final class ValueMeta {
             return;
         }
         if (type == ValueType.ABST_INT && abstValue != null) {
-            System.out.println(abstValue);
+            switch (abstValue) {
+                case POS_INT:
+                    System.out.println("PosInt");
+                    break;
+                case NEG_INT:
+                    System.out.println("NegInt");
+                    break;
+                case ZERO_INT:
+                    System.out.println("ZeroInt");
+                    break;
+                case ANY_INT:
+                    System.out.println("AnyInt");
+                    break;
+                default:
+                    throw new RuntimeException("ValueMeta: print() called on invalid ABST_INT");
+            }
             return;
         }
         if (type == ValueType.ABST_FLOAT && abstValue != null) {
-            System.out.println(abstValue);
+            switch (abstValue) {
+                case POS_FLOAT:
+                    System.out.println("PosFloat");
+                    break;
+                case NEG_FLOAT:
+                    System.out.println("NegFloat");
+                    break;
+                case ZERO_FLOAT:
+                    System.out.println("ZeroFloat");
+                    break;
+                case ANY_FLOAT:
+                    System.out.println("AnyFloat");
+                    break;
+                default:
+                    throw new RuntimeException("ValueMeta: print() called on invalid ABST_FLOAT");
+            }
             return;
         }
 
@@ -577,10 +631,20 @@ public final class ValueMeta {
             throw new RuntimeException("ValueMeta: div() called on different types");
         }
 
-        if (left.getType() == ValueType.INT) { // TODO:
+        if (left.getType() == ValueType.INT) {
+            if (right.getIntValue() == 0) {
+                ValueMeta res = ValueMeta.createNull(null, ValueType.INT);
+                res.abstValue = AbstValue.ILLEGAL;
+                return res;
+            }
             return ValueMeta.createInt(null, left.getIntValue() / right.getIntValue());
         }
-        if (left.getType() == ValueType.FLOAT) { // TODO:
+        if (left.getType() == ValueType.FLOAT) {
+            if (right.getFloatValue() == 0.0) {
+                ValueMeta res = ValueMeta.createNull(null, ValueType.FLOAT);
+                res.abstValue = AbstValue.ILLEGAL;
+                return res;
+            }
             return ValueMeta.createFloat(null, left.getFloatValue() / right.getFloatValue());
         }
         if (left.getType() == ValueType.ABST_INT && divTable.containsKey(left.abstValue) && divTable.get(left.abstValue).containsKey(right.abstValue)) {
@@ -591,6 +655,40 @@ public final class ValueMeta {
         }
 
         throw new RuntimeException("ValueMeta: div() called on UNDEFINED type");
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    private static HashMap<AbstValue, AbstValue> negTable = new HashMap<AbstValue, AbstValue>() {{
+        put(AbstValue.POS_INT, AbstValue.NEG_INT);
+        put(AbstValue.NEG_INT, AbstValue.POS_INT);
+        put(AbstValue.ZERO_INT, AbstValue.ZERO_INT);
+        put(AbstValue.ANY_INT, AbstValue.ANY_INT);
+        put(AbstValue.POS_FLOAT, AbstValue.NEG_FLOAT);
+        put(AbstValue.NEG_FLOAT, AbstValue.POS_FLOAT);
+        put(AbstValue.ZERO_FLOAT, AbstValue.ZERO_FLOAT);
+        put(AbstValue.ANY_FLOAT, AbstValue.ANY_FLOAT);
+    }};
+
+    public static ValueMeta neg(ValueMeta value) {
+        if (value == null) {
+            throw new RuntimeException("ValueMeta: neg() called on null");
+        }
+
+        if (value.getType() == ValueType.INT) {
+            return ValueMeta.createInt(null, -value.getIntValue());
+        }
+        if (value.getType() == ValueType.FLOAT) {
+            return ValueMeta.createFloat(null, -value.getFloatValue());
+        }
+        if (value.getType() == ValueType.ABST_INT && negTable.containsKey(value.abstValue)) {
+            return ValueMeta.createAbstInt(null, negTable.get(value.abstValue));
+        }
+        if (value.getType() == ValueType.ABST_FLOAT && negTable.containsKey(value.abstValue)) {
+            return ValueMeta.createAbstFloat(null, negTable.get(value.abstValue));
+        }
+
+        throw new RuntimeException("ValueMeta: neg() called on UNDEFINED type");
     }
 
     ////////////////////////////////////////////////////////////////////////////
