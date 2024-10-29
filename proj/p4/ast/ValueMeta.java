@@ -248,6 +248,10 @@ public final class ValueMeta {
 
     ////////////////////////////////////////////////////////////////////////////
 
+    public ValueMeta copy() {
+        return new ValueMeta(this.ident, this.type, this.intValue, this.floatValue, this.boolValue, this.abstValue);
+    }
+
     public ValueMeta copyWithIdent(String ident) {
         return new ValueMeta(ident, this.type, this.intValue, this.floatValue, this.boolValue, this.abstValue);
     }
@@ -272,6 +276,12 @@ public final class ValueMeta {
         }
         if (left.getType() == ValueType.BOOL) {
             return left.getBoolValue() == right.getBoolValue();
+        }
+        if (left.getType() == ValueType.ABST_INT) {
+            return left.getAbstIntValue() == right.getAbstIntValue();
+        }
+        if (left.getType() == ValueType.ABST_FLOAT) {
+            return left.getAbstFloatValue() == right.getAbstFloatValue();
         }
 
         throw new RuntimeException("ValueMeta: equals() called on UNDEFINED type");

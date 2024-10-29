@@ -6,6 +6,7 @@ import java.util.HashMap;
 public class SymbolTableHelper {
     ////////////////////////////////////////////////////////////////////////////
     // Injection
+    private Stack<Map<String,ValueMeta>> stashed;
     private Stack<Map<String,ValueMeta>> symbolTables;
 
     ////////////////////////////////////////////////////////////////////////////
@@ -226,5 +227,49 @@ public class SymbolTableHelper {
             return;
         }
         throw new RuntimeException("Variable " + ident + " not declared");
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    public void useTwin() {
+        Stack<Map<String, ValueMeta>> newSymbolTables = new Stack<Map<String, ValueMeta>>();
+        for (Map<String, ValueMeta> symbolTable : symbolTables) {
+            newSymbolTables.push(new HashMap<String, ValueMeta>());
+            for (Map.Entry<String, ValueMeta> entry : symbolTable.entrySet()) {
+                newSymbolTables.peek().put(entry.getKey(), entry.getValue().copy());
+            }
+        }
+        stashed = symbolTables;
+        symbolTables = newSymbolTables;
+    }
+
+    public SymbolTableHelper popTwin() {
+        SymbolTableHelper res = new SymbolTableHelper(symbolTables);
+        symbolTables = stashed;
+        stashed = null;
+        return res;
+    }
+
+    public void mergeTwin(SymbolTableHelper twin) {
+        for (Map<String, ValueMeta> symbolTable : symbolTables) {
+            for (Map.Entry<String, ValueMeta> entry : symbolTable.entrySet()) {
+                if (twin.isConcreted(entry.getKey())) {
+                    entry.setValue(ValueMeta.merge(entry.getValue(), twin.findValue(entry.getKey())));
+                }
+            }
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    public boolean hasIdenticalVal(SymbolTableHelper twin) {
+        for (Map<String, ValueMeta> symbolTable : symbolTables) {
+            for (Map.Entry<String, ValueMeta> entry : symbolTable.entrySet()) {
+                if (!twin.isConcreted(entry.getKey()) || !entry.getValue().equals(twin.findValue(entry.getKey()))) {    
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

@@ -384,6 +384,7 @@ public final class AbstRuntime implements Runtime {
     }
 
     public RuntimeMeta runIfStmt(IfStmt ifStmt) {
+        /**
         RuntimeMeta resStatus = runCondExpr(ifStmt.expr);
         if (resStatus == null) {
             throw new RuntimeException("IfStmt is not valid");
@@ -391,17 +392,32 @@ public final class AbstRuntime implements Runtime {
         if (!resStatus.isSuccessful()) {
             return resStatus;
         }
+        */
 
-        if (resStatus.getValue().getBoolValue().booleanValue()) {
-            return runStmt(ifStmt.thenstmt);
+        stHelper.useTwin();
+        RuntimeMeta resStatus = runStmt(ifStmt.thenstmt);
+        if (resStatus == null) {
+            throw new RuntimeException("thenStmt is not valid");
         }
-        if (ifStmt.elsestmt != null && !resStatus.getValue().getBoolValue().booleanValue()) {
-            return runStmt(ifStmt.elsestmt);
+        SymbolTableHelper twin = stHelper.popTwin();
+        if (ifStmt.elsestmt != null) {
+            stHelper.useTwin();
+            resStatus = runStmt(ifStmt.elsestmt);
+            if (resStatus == null) {
+                throw new RuntimeException("elseStmt is not valid");
+            }
+            SymbolTableHelper elseTwin = stHelper.popTwin();
+            twin.mergeTwin(elseTwin);
+            stHelper = twin;
+        } else {
+            stHelper.mergeTwin(twin);
         }
+
         return RuntimeMeta.createSuccess(null);
     }
 
     public RuntimeMeta runWhileStmt(WhileStmt whileStmt) {
+        /**
         RuntimeMeta resStatus = runCondExpr(whileStmt.expr);
         if (resStatus == null) {
             throw new RuntimeException("WhileStmt is not valid");
@@ -409,16 +425,24 @@ public final class AbstRuntime implements Runtime {
         if (!resStatus.isSuccessful()) {
             return resStatus;
         }
+        */
 
-        while (resStatus.getValue().getBoolValue().booleanValue()) {
-            resStatus = runStmt(whileStmt.body);
+        while (true) {
+            stHelper.useTwin();
+            RuntimeMeta resStatus = runStmt(whileStmt.body);
             if (resStatus == null) {
                 throw new RuntimeException("WhileStmt is not valid");
             }
             if (!resStatus.isSuccessful()) {
                 return resStatus;
             }
+            SymbolTableHelper twin = stHelper.popTwin();
+            if (stHelper.hasIdenticalVal(twin)) {
+                break;
+            }
+            stHelper.mergeTwin(twin);
 
+            /**
             resStatus = runCondExpr(whileStmt.expr);
             if (resStatus == null) {
                 throw new RuntimeException("WhileStmt is not valid");
@@ -426,6 +450,7 @@ public final class AbstRuntime implements Runtime {
             if (!resStatus.isSuccessful()) {
                 return resStatus;
             }
+            */
         }
 
         return RuntimeMeta.createSuccess(null);
