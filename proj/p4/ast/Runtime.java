@@ -14,6 +14,7 @@ public interface Runtime {
     public RuntimeMeta runReadFloatExpr(ReadFloatExpr readFloatExpr);
     public RuntimeMeta runBinaryExpr(BinaryExpr binExpr);
     public RuntimeMeta runCondExpr(CondExpr condExpr);
+    public RuntimeMeta runCompExpr(CompExpr compExpr);
     public RuntimeMeta runLogicalExpr(LogicalExpr logicalExpr);
     public RuntimeMeta runStmt(Stmt stmt);
     public RuntimeMeta runBlockStmt(BlockStmt blockStmt);

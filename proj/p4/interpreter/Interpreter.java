@@ -6,7 +6,7 @@ import ast.SymbolTableHelper;
 import ast.TypeCheck;
 import ast.ValueMeta;
 import ast.RuntimeMeta;
-import ast.Runtime;
+import ast.RealRuntime;
 import java.io.*;
 import java.util.*;
 import java.util.Scanner;
@@ -84,7 +84,7 @@ public class Interpreter {
         // run the program
         Stack<Map<String,ValueMeta>> symbolTablesRun = new Stack<Map<String,ValueMeta>>();
         SymbolTableHelper symbolTableHelperRun = new SymbolTableHelper(symbolTablesRun);
-        Runtime runtime = new Runtime(symbolTableHelperRun, values);
+        RealRuntime runtime = new RealRuntime(symbolTableHelperRun, values);
         RuntimeMeta runtimeMeta = astRoot.run(runtime);
         if (runtimeMeta == null) {
             throw new RuntimeException("Failed to run the program");
