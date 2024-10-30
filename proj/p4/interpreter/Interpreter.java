@@ -40,31 +40,6 @@ public class Interpreter {
         } catch (Exception ex) {
             Interpreter.fatalError("Uncaught parsing error: " + ex, EXIT_PARSING_ERROR);
         }
-        // for debugging
-        // astRoot.print(System.out);
-
-        /**
-        // for ReadIntExpr, ReadFloatExpr
-        Queue<ValueMeta> values = new LinkedList<>();
-        try {
-            if (System.in.available() != 0) {
-                Scanner s = new Scanner(System.in);
-                while (s.hasNext()) {
-                    if (s.hasNextInt()) {
-                        values.add(ValueMeta.createInt(null, Long.valueOf(s.nextInt())));
-                    } else if (s.hasNextFloat()) {
-                        values.add(ValueMeta.createFloat(null, Double.valueOf(s.nextFloat())));
-                    } else {
-                        throw new RuntimeException("Invalid input");
-                    }
-                }
-                s.close();
-            }
-        } catch (IOException ex) {
-            // do nothing
-        }
-        */
-
 
         // type checking. If the program does not typecheck,
         // call fatalError with return code EXIT_STATIC_CHECKING_ERROR
@@ -75,36 +50,11 @@ public class Interpreter {
         if (!AstErrorHandler.isSuccessful(code)) {
             if (code == AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR) {
                 Interpreter.fatalError("Uncaught static checking error", EXIT_STATIC_CHECKING_ERROR);
-            } else if (code == AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR) {
+            }
+            if (code == AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR) {
                 Interpreter.fatalError("Uncaught uninitialized variable error", EXIT_UNINITIALIZED_VAR_ERROR);
-            } else if (code == AstErrorHandler.ErrorCode.DIV_BY_ZERO_ERROR) {
-                Interpreter.fatalError("Uncaught division by zero error", EXIT_DIV_BY_ZERO_ERROR);
-            } else if (code == AstErrorHandler.ErrorCode.FAILED_STDIN_READ) {
-                Interpreter.fatalError("Failed to read from stdin", EXIT_FAILED_STDIN_READ);
             }
         }
-
-        /**
-        // run the program
-        Stack<Map<String,ValueMeta>> symbolTablesRun = new Stack<Map<String,ValueMeta>>();
-        SymbolTableHelper symbolTableHelperRun = new SymbolTableHelper(symbolTablesRun);
-        RealRuntime runtime = new RealRuntime(symbolTableHelperRun, values);
-        RuntimeMeta runtimeMeta = astRoot.run(runtime);
-        if (runtimeMeta == null) {
-            throw new RuntimeException("Failed to run the program");
-        }
-        if (!runtimeMeta.isSuccessful()) {
-            if (runtimeMeta.getErrorCode() == AstErrorHandler.ErrorCode.FAILED_STDIN_READ) {
-                Interpreter.fatalError("Failed to read from stdin", EXIT_FAILED_STDIN_READ);
-            }
-            if (runtimeMeta.getErrorCode() == AstErrorHandler.ErrorCode.DIV_BY_ZERO_ERROR) {
-                Interpreter.fatalError("Division by zero error", EXIT_DIV_BY_ZERO_ERROR);
-            }
-            if (runtimeMeta.getErrorCode() == AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR) {
-                Interpreter.fatalError("Uninitialized variable error", EXIT_UNINITIALIZED_VAR_ERROR);
-            }
-        }
-        */
 
         // run the program w/ AbstRuntime
         Stack<Map<String,ValueMeta>> symbolTablesRun = new Stack<Map<String,ValueMeta>>();
@@ -115,14 +65,8 @@ public class Interpreter {
             throw new RuntimeException("Failed to run the program");
         }
         if (!runtimeMeta.isSuccessful()) {
-            if (runtimeMeta.getErrorCode() == AstErrorHandler.ErrorCode.FAILED_STDIN_READ) {
-                Interpreter.fatalError("Failed to read from stdin", EXIT_FAILED_STDIN_READ);
-            }
             if (runtimeMeta.getErrorCode() == AstErrorHandler.ErrorCode.DIV_BY_ZERO_ERROR) {
                 Interpreter.fatalError("Division by zero error", EXIT_DIV_BY_ZERO_ERROR);
-            }
-            if (runtimeMeta.getErrorCode() == AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR) {
-                Interpreter.fatalError("Uninitialized variable error", EXIT_UNINITIALIZED_VAR_ERROR);
             }
         }
     }

@@ -257,7 +257,6 @@ public final class ValueMeta {
     }
 
     ////////////////////////////////////////////////////////////////////////////
-    // TODO:
 
     public static boolean equals(ValueMeta left, ValueMeta right) {
         if (left == null || right == null) {
@@ -703,7 +702,6 @@ public final class ValueMeta {
 
     ////////////////////////////////////////////////////////////////////////////
 
-    // TODO:
     private static HashMap<AbstValue, HashMap<AbstValue, AbstValue>> mergeTable = new HashMap<AbstValue, HashMap<AbstValue, AbstValue>>() {{
         // ABST_INT
         put(AbstValue.POS_INT, new HashMap<AbstValue, AbstValue>() {{
@@ -757,7 +755,6 @@ public final class ValueMeta {
         }});
     }};
 
-    // TODO:
     public static ValueMeta merge(ValueMeta left, ValueMeta right) {
         if (left == null || right == null) {
             throw new RuntimeException("ValueMeta: merge() called on null");
