@@ -340,6 +340,15 @@ public final class ValueMeta {
         if (left.getType() == ValueType.BOOL) {
             return left.getBoolValue() == right.getBoolValue();
         }
+        if (left.getType() == ValueType.ABST_INT) {
+            return left.getAbstIntValue() == right.getAbstIntValue();
+        }
+        if (left.getType() == ValueType.ABST_FLOAT) {
+            return left.getAbstFloatValue() == right.getAbstFloatValue();
+        }
+        if (left.getType() == ValueType.ABST_BOOL) {
+            return left.getAbstBoolValue() == right.getAbstBoolValue();
+        }
 
         throw new RuntimeException("ValueMeta: equals() called on UNDEFINED type");
     }
