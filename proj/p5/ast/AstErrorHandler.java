@@ -8,7 +8,8 @@ public final class AstErrorHandler {
         STATIC_CHECKING_ERROR,
         UNINITIALIZED_VAR_ERROR,
         DIV_BY_ZERO_ERROR,
-        FAILED_STDIN_READ
+        FAILED_STDIN_READ,
+        DEAD_CODE_ERROR,
     }
 
     public static ErrorCode handle(ArrayList<Supplier<ErrorCode>> fns) {
