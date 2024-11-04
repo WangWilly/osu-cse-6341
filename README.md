@@ -88,3 +88,22 @@ make
 ```bash
 ./scripts/packHw3.sh
 ```
+
+### 🚩 Project 4
+
+- 📌 [Instructions](https://drive.google.com/file/d/1G8gKJ_SrWn38rkuugBQmffZaqYhN_VTc/view?usp=sharing)
+- 📌 [Dependent files](https://drive.google.com/drive/folders/1Cqnf5uVXdf0XAzXjrXIoilNs31VMRPrB?usp=sharing)
+- 📌 Test cases
+```bash
+./scripts/makeHw4.sh
+
+./scripts/execHw4.sh s_
+```
+
+- 📌 Pack it up:
+```bash
+./scripts/packHw4.sh
+```
+
+### 🚩 Project 5
+

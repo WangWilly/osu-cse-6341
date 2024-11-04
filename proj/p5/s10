@@ -1,0 +1,1 @@
+int x = 1; int y; y = 2; print x + y + x + y;

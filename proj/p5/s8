@@ -1,0 +1,5 @@
+int z = readint;
+while (z > 0) {
+  print z;
+  z = z - 1;
+}
