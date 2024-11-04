@@ -7,12 +7,16 @@ public final class ValueMeta {
         INT,
         FLOAT,
         UNDEFINED,
+        ABST_BOOL,
         ABST_INT,
         ABST_FLOAT,
     }
 
     public enum AbstValue {
         ILLEGAL,
+        TRUE_BOOL,
+        FALSE_BOOL,
+        ANY_BOOL,
         POS_INT,
         NEG_INT,
         ZERO_INT,
@@ -85,6 +89,8 @@ public final class ValueMeta {
         return value;
     }
 
+    ////////////////////////////////////////////////////////////////////////////
+
     public static ValueMeta createAbstInt(String ident, AbstValue abstValue) {
         ValueMeta value = new ValueMeta(ident, ValueType.ABST_INT, null, null, null, abstValue);
         return value;
@@ -113,6 +119,18 @@ public final class ValueMeta {
             return createAbstFloat(ident, AbstValue.NEG_FLOAT);
         }
         return createAbstFloat(ident, AbstValue.ZERO_FLOAT);
+    }
+
+    public static ValueMeta createAbstBool(String ident, AbstValue abstValue) {
+        ValueMeta value = new ValueMeta(ident, ValueType.ABST_BOOL, null, null, null, abstValue);
+        return value;
+    }
+
+    public static ValueMeta createAbstBool(String ident, Boolean boolValue) {
+        if (boolValue) {
+            return createAbstBool(ident, AbstValue.TRUE_BOOL);
+        }
+        return createAbstBool(ident, AbstValue.FALSE_BOOL);
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -162,6 +180,13 @@ public final class ValueMeta {
         return abstValue;
     }
 
+    public AbstValue getAbstBoolValue() {
+        if (type != ValueType.ABST_BOOL) {
+            throw new RuntimeException("ValueMeta: getAbstBoolValue() called on non-ABST_BOOL type");
+        }
+        return abstValue;
+    }
+
     public boolean hasValue() {
         return intValue != null || floatValue != null || boolValue != null || abstValue != null;
     }
@@ -187,6 +212,9 @@ public final class ValueMeta {
         }
         if (type == ValueType.ABST_FLOAT) {
             return ident + " (abst_float): " + abstValue;
+        }
+        if (type == ValueType.ABST_BOOL) {
+            return ident + " (abst_bool): " + abstValue;
         }
         return ident + " (undefined)";
     }
@@ -242,6 +270,22 @@ public final class ValueMeta {
             }
             return;
         }
+        if (type == ValueType.ABST_BOOL && abstValue != null) {
+            switch (abstValue) {
+                case TRUE_BOOL:
+                    System.out.println("TrueBool");
+                    break;
+                case FALSE_BOOL:
+                    System.out.println("FalseBool");
+                    break;
+                case ANY_BOOL:
+                    System.out.println("AnyBool");
+                    break;
+                default:
+                    throw new RuntimeException("ValueMeta: print() called on invalid ABST_BOOL");
+            }
+            return;
+        }
 
         throw new RuntimeException("ValueMeta: " + toString() + " is not printable");
     }
@@ -276,18 +320,206 @@ public final class ValueMeta {
         if (left.getType() == ValueType.BOOL) {
             return left.getBoolValue() == right.getBoolValue();
         }
-        if (left.getType() == ValueType.ABST_INT) {
-            return left.getAbstIntValue() == right.getAbstIntValue();
-        }
-        if (left.getType() == ValueType.ABST_FLOAT) {
-            return left.getAbstFloatValue() == right.getAbstFloatValue();
-        }
 
         throw new RuntimeException("ValueMeta: equals() called on UNDEFINED type");
     }
 
+    public static HashMap<AbstValue, HashMap<AbstValue, AbstValue>> eqTable = new HashMap<AbstValue, HashMap<AbstValue, AbstValue>>() {{
+        // ABST_INT
+        put(AbstValue.POS_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.NEG_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.FALSE_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ZERO_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.FALSE_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ANY_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        // ABST_FLOAT
+        put(AbstValue.POS_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.NEG_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.FALSE_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ZERO_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.FALSE_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ANY_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        // ABST_BOOL
+        put(AbstValue.TRUE_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.TRUE_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.FALSE_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.FALSE_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ANY_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.ANY_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.ANY_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.ANY_BOOL);
+        }});
+    }};
+
+    public static ValueMeta vEquals(ValueMeta left, ValueMeta right) {
+        if (left == null || right == null) {
+            throw new RuntimeException("ValueMeta: vEquals() called on null");
+        }
+
+        if (left.getType() != right.getType()) {
+            throw new RuntimeException("ValueMeta: vEquals() called on different types");
+        }
+
+        if (left.getType() == ValueType.BOOL ||
+            left.getType() == ValueType.INT ||
+            left.getType() == ValueType.FLOAT
+        ) {
+            return ValueMeta.createBool(null, equals(left, right));
+        }
+
+        if (left.getType() == ValueType.ABST_BOOL ||
+            left.getType() == ValueType.ABST_INT ||
+            left.getType() == ValueType.ABST_FLOAT
+        ) {
+            if (eqTable.containsKey(left.abstValue) && eqTable.get(left.abstValue).containsKey(right.abstValue)) {
+                return ValueMeta.createAbstBool(null, eqTable.get(left.abstValue).get(right.abstValue));
+            }
+        }
+        
+        throw new RuntimeException("ValueMeta: vEquals() called on UNDEFINED type");
+    }
+
     public static boolean notEquals(ValueMeta left, ValueMeta right) {
         return !equals(left, right);
+    }
+
+    public static HashMap<AbstValue, HashMap<AbstValue, AbstValue>> neTable = new HashMap<AbstValue, HashMap<AbstValue, AbstValue>>() {{
+        // ABST_INT
+        put(AbstValue.POS_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.NEG_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.TRUE_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ZERO_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.TRUE_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ANY_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        // ABST_FLOAT
+        put(AbstValue.POS_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.NEG_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.TRUE_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ZERO_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.TRUE_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ANY_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        // ABST_BOOL
+        put(AbstValue.TRUE_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.FALSE_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.FALSE_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.TRUE_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ANY_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.ANY_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.ANY_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.ANY_BOOL);
+        }});
+    }};
+
+    public static ValueMeta vNotEquals(ValueMeta left, ValueMeta right) {
+        if (left == null || right == null) {
+            throw new RuntimeException("ValueMeta: vNotEquals() called on null");
+        }
+
+        if (left.getType() != right.getType()) {
+            throw new RuntimeException("ValueMeta: vNotEquals() called on different types");
+        }
+
+        if (left.getType() == ValueType.BOOL ||
+            left.getType() == ValueType.INT ||
+            left.getType() == ValueType.FLOAT
+        ) {
+            return ValueMeta.createBool(null, notEquals(left, right));
+        }
+
+        if (left.getType() == ValueType.ABST_BOOL ||
+            left.getType() == ValueType.ABST_INT ||
+            left.getType() == ValueType.ABST_FLOAT
+        ) {
+            if (neTable.containsKey(left.abstValue) && neTable.get(left.abstValue).containsKey(right.abstValue)) {
+                return ValueMeta.createAbstBool(null, neTable.get(left.abstValue).get(right.abstValue));
+            }
+        }
+        
+        throw new RuntimeException("ValueMeta: vNotEquals() called on UNDEFINED type");
     }
 
     public static boolean lessThan(ValueMeta left, ValueMeta right) {
@@ -309,6 +541,103 @@ public final class ValueMeta {
         throw new RuntimeException("ValueMeta: lessThan() called on non-INT/FLOAT type");
     }
 
+    private static HashMap<AbstValue, HashMap<AbstValue, AbstValue>> ltTable = new HashMap<AbstValue, HashMap<AbstValue, AbstValue>>() {{
+        // ABST_INT
+        put(AbstValue.POS_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.NEG_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.TRUE_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ZERO_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.TRUE_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ANY_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        // ABST_FLOAT
+        put(AbstValue.POS_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.NEG_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.TRUE_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ZERO_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.TRUE_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ANY_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        // ABST_BOOL
+        put(AbstValue.TRUE_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.FALSE_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.FALSE_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.TRUE_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ANY_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.ANY_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.ANY_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.ANY_BOOL);
+        }});
+    }};
+
+    public static ValueMeta vLessThan(ValueMeta left, ValueMeta right) {
+        if (left == null || right == null) {
+            throw new RuntimeException("ValueMeta: vLessThan() called on null");
+        }
+
+        if (left.getType() != right.getType()) {
+            throw new RuntimeException("ValueMeta: vLessThan() called on different types");
+        }
+
+        if (left.getType() == ValueType.BOOL ||
+            left.getType() == ValueType.INT ||
+            left.getType() == ValueType.FLOAT
+        ) {
+            return ValueMeta.createBool(null, lessThan(left, right));
+        }
+
+        if (left.getType() == ValueType.ABST_BOOL ||
+            left.getType() == ValueType.ABST_INT ||
+            left.getType() == ValueType.ABST_FLOAT
+        ) {
+            if (ltTable.containsKey(left.abstValue) && ltTable.get(left.abstValue).containsKey(right.abstValue)) {
+                return ValueMeta.createAbstBool(null, ltTable.get(left.abstValue).get(right.abstValue));
+            }
+        }
+        
+        throw new RuntimeException("ValueMeta: vLessThan() called on UNDEFINED type");
+    }
+
     public static boolean greaterThan(ValueMeta left, ValueMeta right) {
         if (left == null || right == null) {
             throw new RuntimeException("ValueMeta: greaterThan() called on null");
@@ -328,12 +657,303 @@ public final class ValueMeta {
         throw new RuntimeException("ValueMeta: greaterThan() called on non-INT/FLOAT type");
     }
 
+    private static HashMap<AbstValue, HashMap<AbstValue, AbstValue>> gtTable = new HashMap<AbstValue, HashMap<AbstValue, AbstValue>>() {{
+        // ABST_INT
+        put(AbstValue.POS_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.NEG_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.FALSE_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ZERO_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.FALSE_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ANY_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        // ABST_FLOAT
+        put(AbstValue.POS_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.NEG_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.FALSE_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ZERO_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.FALSE_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ANY_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        // ABST_BOOL
+        put(AbstValue.TRUE_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.FALSE_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.FALSE_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.TRUE_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ANY_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.ANY_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.ANY_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.ANY_BOOL);
+        }});
+    }};
+
+    public static ValueMeta vGreaterThan(ValueMeta left, ValueMeta right) {
+        if (left == null || right == null) {
+            throw new RuntimeException("ValueMeta: vGreaterThan() called on null");
+        }
+
+        if (left.getType() != right.getType()) {
+            throw new RuntimeException("ValueMeta: vGreaterThan() called on different types");
+        }
+
+        if (left.getType() == ValueType.BOOL ||
+            left.getType() == ValueType.INT ||
+            left.getType() == ValueType.FLOAT
+        ) {
+            return ValueMeta.createBool(null, greaterThan(left, right));
+        }
+
+        if (left.getType() == ValueType.ABST_BOOL ||
+            left.getType() == ValueType.ABST_INT ||
+            left.getType() == ValueType.ABST_FLOAT
+        ) {
+            if (gtTable.containsKey(left.abstValue) && gtTable.get(left.abstValue).containsKey(right.abstValue)) {
+                return ValueMeta.createAbstBool(null, gtTable.get(left.abstValue).get(right.abstValue));
+            }
+        }
+        
+        throw new RuntimeException("ValueMeta: vGreaterThan() called on UNDEFINED type");
+    }
+
     public static boolean lessThanOrEqual(ValueMeta left, ValueMeta right) {
         return lessThan(left, right) || equals(left, right);
     }
 
+    public static HashMap<AbstValue, HashMap<AbstValue, AbstValue>> leTable = new HashMap<AbstValue, HashMap<AbstValue, AbstValue>>() {{
+        // ABST_INT
+        put(AbstValue.POS_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.NEG_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.TRUE_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ZERO_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.TRUE_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ANY_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        // ABST_FLOAT
+        put(AbstValue.POS_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.NEG_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.TRUE_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ZERO_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.TRUE_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ANY_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        // ABST_BOOL
+        put(AbstValue.TRUE_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.TRUE_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.FALSE_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.TRUE_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.TRUE_BOOL);
+        }});
+        put(AbstValue.ANY_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.TRUE_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.ANY_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.ANY_BOOL);
+        }});
+    }};
+
+    public static ValueMeta vLessThanOrEqual(ValueMeta left, ValueMeta right) {
+        if (left == null || right == null) {
+            throw new RuntimeException("ValueMeta: vLessThanOrEqual() called on null");
+        }
+
+        if (left.getType() != right.getType()) {
+            throw new RuntimeException("ValueMeta: vLessThanOrEqual() called on different types");
+        }
+
+        if (left.getType() == ValueType.BOOL ||
+            left.getType() == ValueType.INT ||
+            left.getType() == ValueType.FLOAT
+        ) {
+            return ValueMeta.createBool(null, lessThanOrEqual(left, right));
+        }
+
+        if (left.getType() == ValueType.ABST_BOOL ||
+            left.getType() == ValueType.ABST_INT ||
+            left.getType() == ValueType.ABST_FLOAT
+        ) {
+            if (leTable.containsKey(left.abstValue) && leTable.get(left.abstValue).containsKey(right.abstValue)) {
+                return ValueMeta.createAbstBool(null, leTable.get(left.abstValue).get(right.abstValue));
+            }
+        }
+        
+        throw new RuntimeException("ValueMeta: vLessThanOrEqual() called on UNDEFINED type");
+    }
+
     public static boolean greaterThanOrEqual(ValueMeta left, ValueMeta right) {
         return greaterThan(left, right) || equals(left, right);
+    }
+
+    public static HashMap<AbstValue, HashMap<AbstValue, AbstValue>> geTable = new HashMap<AbstValue, HashMap<AbstValue, AbstValue>>() {{
+        // ABST_INT
+        put(AbstValue.POS_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.NEG_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.FALSE_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ZERO_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.FALSE_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ANY_INT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_INT, AbstValue.ANY_BOOL);
+            put(AbstValue.ANY_INT, AbstValue.ANY_BOOL);
+        }});
+        // ABST_FLOAT
+        put(AbstValue.POS_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.NEG_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.FALSE_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ZERO_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.FALSE_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ANY_FLOAT, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.ZERO_FLOAT, AbstValue.ANY_BOOL);
+            put(AbstValue.ANY_FLOAT, AbstValue.ANY_BOOL);
+        }});
+        // ABST_BOOL
+        put(AbstValue.TRUE_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.TRUE_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.TRUE_BOOL);
+        }});
+        put(AbstValue.FALSE_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.FALSE_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ANY_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.ANY_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.ANY_BOOL);
+        }});
+    }};
+
+    public static ValueMeta vGreaterThanOrEqual(ValueMeta left, ValueMeta right) {
+        if (left == null || right == null) {
+            throw new RuntimeException("ValueMeta: vGreaterThanOrEqual() called on null");
+        }
+
+        if (left.getType() != right.getType()) {
+            throw new RuntimeException("ValueMeta: vGreaterThanOrEqual() called on different types");
+        }
+
+        if (left.getType() == ValueType.BOOL ||
+            left.getType() == ValueType.INT ||
+            left.getType() == ValueType.FLOAT
+        ) {
+            return ValueMeta.createBool(null, greaterThanOrEqual(left, right));
+        }
+
+        if (left.getType() == ValueType.ABST_BOOL ||
+            left.getType() == ValueType.ABST_INT ||
+            left.getType() == ValueType.ABST_FLOAT
+        ) {
+            if (geTable.containsKey(left.abstValue) && geTable.get(left.abstValue).containsKey(right.abstValue)) {
+                return ValueMeta.createAbstBool(null, geTable.get(left.abstValue).get(right.abstValue));
+            }
+        }
+        
+        throw new RuntimeException("ValueMeta: vGreaterThanOrEqual() called on UNDEFINED type");
     }
 
     ////////////////////////////////////////////////////////////////////////////
