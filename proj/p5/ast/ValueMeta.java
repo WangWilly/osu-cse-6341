@@ -195,6 +195,26 @@ public final class ValueMeta {
         return abstValue == AbstValue.ILLEGAL;
     }
 
+    public boolean isTrue() {
+        if (type == ValueType.BOOL) {
+            return boolValue;
+        }
+        if (type == ValueType.ABST_BOOL) {
+            return abstValue == AbstValue.TRUE_BOOL;
+        }
+        return false;
+    }
+
+    public boolean isFalse() {
+        if (type == ValueType.BOOL) {
+            return !boolValue;
+        }
+        if (type == ValueType.ABST_BOOL) {
+            return abstValue == AbstValue.FALSE_BOOL;
+        }
+        return false;
+    }
+
     ////////////////////////////////////////////////////////////////////////////
 
     public String toString() {
@@ -955,6 +975,114 @@ public final class ValueMeta {
         
         throw new RuntimeException("ValueMeta: vGreaterThanOrEqual() called on UNDEFINED type");
     }
+
+    ////////////////////////////////////////////////////////////////////////////
+    
+    private static HashMap<AbstValue, AbstValue> notTable = new HashMap<AbstValue, AbstValue>() {{
+        put(AbstValue.TRUE_BOOL, AbstValue.FALSE_BOOL);
+        put(AbstValue.FALSE_BOOL, AbstValue.TRUE_BOOL);
+        put(AbstValue.ANY_BOOL, AbstValue.ANY_BOOL);
+    }};
+
+    public static ValueMeta not(ValueMeta value) {
+        if (value == null) {
+            throw new RuntimeException("ValueMeta: not() called on null");
+        }
+
+        if (value.getType() == ValueType.BOOL) {
+            return ValueMeta.createBool(null, !value.getBoolValue());
+        }
+
+        if (value.getType() == ValueType.ABST_BOOL) {
+            if (notTable.containsKey(value.abstValue)) {
+                return ValueMeta.createAbstBool(null, notTable.get(value.abstValue));
+            }
+        }
+        
+        throw new RuntimeException("ValueMeta: not() called on UNDEFINED type");
+    }
+
+    /**
+    private static HashMap<AbstValue, HashMap<AbstValue, AbstValue>> andTable = new HashMap<AbstValue, HashMap<AbstValue, AbstValue>>() {{
+        put(AbstValue.TRUE_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.TRUE_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.FALSE_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.FALSE_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.FALSE_BOOL);
+        }});
+        put(AbstValue.ANY_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.ANY_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.ANY_BOOL);
+        }});
+    }};
+
+    public static ValueMeta and(ValueMeta left, ValueMeta right) {
+        if (left == null || right == null) {
+            throw new RuntimeException("ValueMeta: and() called on null");
+        }
+
+        if (left.getType() != right.getType()) {
+            throw new RuntimeException("ValueMeta: and() called on different types");
+        }
+
+        if (left.getType() == ValueType.BOOL) {
+            return ValueMeta.createBool(null, left.getBoolValue() && right.getBoolValue());
+        }
+
+        if (left.getType() == ValueType.ABST_BOOL) {
+            if (andTable.containsKey(left.abstValue) && andTable.get(left.abstValue).containsKey(right.abstValue)) {
+                return ValueMeta.createAbstBool(null, andTable.get(left.abstValue).get(right.abstValue));
+            }
+        }
+        
+        throw new RuntimeException("ValueMeta: and() called on UNDEFINED type");
+    }
+
+    private static HashMap<AbstValue, HashMap<AbstValue, AbstValue>> orTable = new HashMap<AbstValue, HashMap<AbstValue, AbstValue>>() {{
+        put(AbstValue.TRUE_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.TRUE_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.TRUE_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.TRUE_BOOL);
+        }});
+        put(AbstValue.FALSE_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.TRUE_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.FALSE_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.ANY_BOOL);
+        }});
+        put(AbstValue.ANY_BOOL, new HashMap<AbstValue, AbstValue>() {{
+            put(AbstValue.TRUE_BOOL, AbstValue.TRUE_BOOL);
+            put(AbstValue.FALSE_BOOL, AbstValue.ANY_BOOL);
+            put(AbstValue.ANY_BOOL, AbstValue.ANY_BOOL);
+        }});
+    }};
+
+    public static ValueMeta or(ValueMeta left, ValueMeta right) {
+        if (left == null || right == null) {
+            throw new RuntimeException("ValueMeta: or() called on null");
+        }
+
+        if (left.getType() != right.getType()) {
+            throw new RuntimeException("ValueMeta: or() called on different types");
+        }
+
+        if (left.getType() == ValueType.BOOL) {
+            return ValueMeta.createBool(null, left.getBoolValue() || right.getBoolValue());
+        }
+
+        if (left.getType() == ValueType.ABST_BOOL) {
+            if (orTable.containsKey(left.abstValue) && orTable.get(left.abstValue).containsKey(right.abstValue)) {
+                return ValueMeta.createAbstBool(null, orTable.get(left.abstValue).get(right.abstValue));
+            }
+        }
+        
+        throw new RuntimeException("ValueMeta: or() called on UNDEFINED type");
+    }
+    */
 
     ////////////////////////////////////////////////////////////////////////////
 
