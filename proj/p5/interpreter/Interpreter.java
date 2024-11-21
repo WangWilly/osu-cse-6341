@@ -23,6 +23,7 @@ public class Interpreter {
     public static final int EXIT_UNINITIALIZED_VAR_ERROR = 3;
     public static final int EXIT_DIV_BY_ZERO_ERROR = 4;
     public static final int EXIT_FAILED_STDIN_READ = 5;
+    public static final int EXIT_DEAD_CODE = 6;
 
     ////////////////////////////////////////////////////////////////////////////
 
@@ -67,6 +68,9 @@ public class Interpreter {
         if (!runtimeMeta.isSuccessful()) {
             if (runtimeMeta.getErrorCode() == AstErrorHandler.ErrorCode.DIV_BY_ZERO_ERROR) {
                 Interpreter.fatalError("Division by zero error", EXIT_DIV_BY_ZERO_ERROR);
+            }
+            if (runtimeMeta.getErrorCode() == AstErrorHandler.ErrorCode.DEAD_CODE_ERROR) {
+                Interpreter.fatalError("Dead code error", EXIT_DEAD_CODE);
             }
         }
     }
