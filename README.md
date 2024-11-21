@@ -107,3 +107,12 @@ make
 
 ### 🚩 Project 5
 
+
+- 📌 [Instructions](https://drive.google.com/file/d/16fkNqLbkSGfZ4KhHmo1i32gBuS2IIylf/view?usp=sharing)
+- 📌 [Dependent files](https://drive.google.com/drive/folders/1Cqnf5uVXdf0XAzXjrXIoilNs31VMRPrB?usp=sharing)
+- 📌 Test cases
+```bash
+./scripts/makeHw5.sh
+
+./scripts/execHw5.sh s_
+```
