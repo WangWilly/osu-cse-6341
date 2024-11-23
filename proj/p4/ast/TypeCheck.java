@@ -306,7 +306,7 @@ public final class TypeCheck {
         // ValueMeta meta = findValue(assignStmt.ident);
         // if (meta == null) {
         if (!symbolTableHelper.isPlaned(assignStmt.ident)) {
-            return AstErrorHandler.ErrorCode.STATIC_CHECKING_ERROR;
+            return AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR;
         }
 
         // if (!checkExpr(assignStmt.expr)) {

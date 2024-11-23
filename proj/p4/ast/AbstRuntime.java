@@ -394,19 +394,19 @@ public final class AbstRuntime implements Runtime {
         }
         */
 
-        stHelper.useTwin();
+        Stack<Map<String,ValueMeta>> stashed = stHelper.useTwin();
         RuntimeMeta resStatus = runStmt(ifStmt.thenstmt);
         if (resStatus == null) {
             throw new RuntimeException("thenStmt is not valid");
         }
-        SymbolTableHelper twin = stHelper.popTwin();
+        SymbolTableHelper twin = stHelper.switchTwin(stashed);
         if (ifStmt.elsestmt != null) {
-            stHelper.useTwin();
+            stashed = stHelper.useTwin();
             resStatus = runStmt(ifStmt.elsestmt);
             if (resStatus == null) {
                 throw new RuntimeException("elseStmt is not valid");
             }
-            SymbolTableHelper elseTwin = stHelper.popTwin();
+            SymbolTableHelper elseTwin = stHelper.switchTwin(stashed);
             twin.mergeTwin(elseTwin);
             stHelper = twin;
         } else {
@@ -428,7 +428,7 @@ public final class AbstRuntime implements Runtime {
         */
 
         while (true) {
-            stHelper.useTwin();
+            Stack<Map<String,ValueMeta>> stashed = stHelper.useTwin();
             RuntimeMeta resStatus = runStmt(whileStmt.body);
             if (resStatus == null) {
                 throw new RuntimeException("WhileStmt is not valid");
@@ -436,7 +436,7 @@ public final class AbstRuntime implements Runtime {
             if (!resStatus.isSuccessful()) {
                 return resStatus;
             }
-            SymbolTableHelper twin = stHelper.popTwin();
+            SymbolTableHelper twin = stHelper.switchTwin(stashed);
             if (stHelper.hasIdenticalVal(twin)) {
                 break;
             }

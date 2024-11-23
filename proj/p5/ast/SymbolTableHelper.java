@@ -6,7 +6,6 @@ import java.util.HashMap;
 public class SymbolTableHelper {
     ////////////////////////////////////////////////////////////////////////////
     // Injection
-    private Stack<Map<String,ValueMeta>> stashed;
     private Stack<Map<String,ValueMeta>> symbolTables;
 
     ////////////////////////////////////////////////////////////////////////////
@@ -231,7 +230,7 @@ public class SymbolTableHelper {
 
     ////////////////////////////////////////////////////////////////////////////
 
-    public void useTwin() {
+    public Stack<Map<String,ValueMeta>> useTwin() {
         Stack<Map<String, ValueMeta>> newSymbolTables = new Stack<Map<String, ValueMeta>>();
         for (Map<String, ValueMeta> symbolTable : symbolTables) {
             newSymbolTables.push(new HashMap<String, ValueMeta>());
@@ -239,11 +238,15 @@ public class SymbolTableHelper {
                 newSymbolTables.peek().put(entry.getKey(), entry.getValue().copy());
             }
         }
-        stashed = symbolTables;
+        Stack<Map<String,ValueMeta>> stashed = symbolTables;
         symbolTables = newSymbolTables;
+        return stashed;
     }
 
-    public SymbolTableHelper popTwin() {
+    public SymbolTableHelper switchTwin(Stack<Map<String,ValueMeta>> stashed) {
+        if (stashed == null) {
+            throw new RuntimeException("No twin to switch");
+        }
         SymbolTableHelper res = new SymbolTableHelper(symbolTables);
         symbolTables = stashed;
         stashed = null;
@@ -253,7 +256,7 @@ public class SymbolTableHelper {
     public void mergeTwin(SymbolTableHelper twin) {
         for (Map<String, ValueMeta> symbolTable : symbolTables) {
             for (Map.Entry<String, ValueMeta> entry : symbolTable.entrySet()) {
-                if (twin.isConcreted(entry.getKey())) {
+                if (entry.getValue().hasValue() && twin.isConcreted(entry.getKey())) {
                     entry.setValue(ValueMeta.merge(entry.getValue(), twin.findValue(entry.getKey())));
                 }
             }

@@ -1,0 +1,4 @@
+int w = readint;
+int x;  
+if (w < 0) { x=1; }
+print x;

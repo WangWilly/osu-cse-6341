@@ -1,0 +1,4 @@
+int w = readint;
+int x = 5;  
+while (x < w) { if (w < 0) x=x+1; else x=x+2; }
+print x;

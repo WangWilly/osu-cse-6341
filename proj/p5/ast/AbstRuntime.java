@@ -34,6 +34,9 @@ public final class AbstRuntime implements Runtime {
         if (!refer.isSuccessful()) {
             return refer;
         }
+        if (!refer.hasValue()) {
+            return RuntimeMeta.createError(AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR);
+        }
 
         ValueMeta value = refer.getValue().copyWithIdent(decl.varDecl.ident);
         stHelper.envalue(decl.varDecl.ident, value);
@@ -113,8 +116,8 @@ public final class AbstRuntime implements Runtime {
     public RuntimeMeta runIdentExpr(IdentExpr identExpr) {
         ValueMeta val = stHelper.findValue(identExpr.ident);
         if (val == null) {
-            // return RuntimeMeta.createError(AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR);
-            throw new RuntimeException("Variable " + identExpr.ident + " not declared");
+            return RuntimeMeta.createError(AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR);
+            // throw new RuntimeException("Variable " + identExpr.ident + " not declared");
         }
         return RuntimeMeta.createSuccess(val);
     }
@@ -126,6 +129,9 @@ public final class AbstRuntime implements Runtime {
         }
         if (!resStatus.isSuccessful()) {
             return resStatus;
+        }
+        if (!resStatus.hasValue()) {
+            return RuntimeMeta.createError(AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR);
         }
 
         return RuntimeMeta.createSuccess(ValueMeta.neg(resStatus.getValue()));
@@ -163,12 +169,18 @@ public final class AbstRuntime implements Runtime {
         if (!leftStatus.isSuccessful()) {
             return leftStatus;
         }
+        if (!leftStatus.hasValue()) {
+            return RuntimeMeta.createError(AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR);
+        }
         RuntimeMeta rightStatus = runExpr(binExpr.expr2);
         if (rightStatus == null) {
             throw new RuntimeException("BinaryExpr is not valid");
         }
         if (!rightStatus.isSuccessful()) {
             return rightStatus;
+        }
+        if (!rightStatus.hasValue()) {
+            return RuntimeMeta.createError(AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR);
         }
 
         ValueMeta left = leftStatus.getValue();
@@ -236,12 +248,18 @@ public final class AbstRuntime implements Runtime {
         if (!left.isSuccessful()) {
             return left;
         }
+        if (!left.hasValue()) {
+            return RuntimeMeta.createError(AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR);
+        }
         RuntimeMeta right = runExpr(compExpr.expr2);
         if (right == null) {
             throw new RuntimeException("CompExpr is not valid");
         }
         if (!right.isSuccessful()) {
             return right;
+        }
+        if (!right.hasValue()) {
+            return RuntimeMeta.createError(AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR);
         }
 
         if (compExpr.op == CompExpr.EQ) {
@@ -275,6 +293,9 @@ public final class AbstRuntime implements Runtime {
             if (!resStatus.isSuccessful()) {
                 return resStatus;
             }
+            if (!resStatus.hasValue()) {
+                return RuntimeMeta.createError(AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR);
+            }
 
             return RuntimeMeta.createSuccess(ValueMeta.not(resStatus.getValue()));
         }
@@ -292,6 +313,9 @@ public final class AbstRuntime implements Runtime {
             if (!left.isSuccessful()) {
                 return left;
             }
+            if (left.hasValue()) {
+                return RuntimeMeta.createError(AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR);
+            }
             if (left.getValue().isFalse()) {
                 return RuntimeMeta.createSuccess(ValueMeta.createAbstBool(null, false));
             }
@@ -302,6 +326,9 @@ public final class AbstRuntime implements Runtime {
             }
             if (!right.isSuccessful()) {
                 return right;
+            }
+            if (right.hasValue()) {
+                return RuntimeMeta.createError(AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR);
             }
             if (right.getValue().isFalse()) {
                 return RuntimeMeta.createSuccess(ValueMeta.createAbstBool(null, false));
@@ -318,6 +345,9 @@ public final class AbstRuntime implements Runtime {
             if (!left.isSuccessful()) {
                 return left;
             }
+            if (left.hasValue()) {
+                return RuntimeMeta.createError(AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR);
+            }
             if (left.getValue().isTrue()) {
                 return RuntimeMeta.createSuccess(ValueMeta.createAbstBool(null, true));
             }
@@ -328,6 +358,9 @@ public final class AbstRuntime implements Runtime {
             }
             if (!right.isSuccessful()) {
                 return right;
+            }
+            if (right.hasValue()) {
+                return RuntimeMeta.createError(AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR);
             }
             if (right.getValue().isTrue()) {
                 return RuntimeMeta.createSuccess(ValueMeta.createAbstBool(null, true));
@@ -380,6 +413,9 @@ public final class AbstRuntime implements Runtime {
         if (!resStatus.isSuccessful()) {
             return resStatus;
         }
+        if (!resStatus.hasValue()) {
+            return RuntimeMeta.createError(AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR);
+        }
 
         if (resStatus.getValue().isFalse()) {
             return RuntimeMeta.createError(AstErrorHandler.ErrorCode.DEAD_CODE_ERROR);
@@ -390,29 +426,38 @@ public final class AbstRuntime implements Runtime {
         }
 
         if (resStatus.getValue().isTrue()) {
-            stHelper.useTwin();
+            Stack<Map<String,ValueMeta>> stashed = stHelper.useTwin();
             resStatus = runStmt(ifStmt.thenstmt);
             if (resStatus == null) {
                 throw new RuntimeException("thenStmt is not valid");
             }
-            SymbolTableHelper twin = stHelper.popTwin();
+            if (!resStatus.isSuccessful()) {
+                return resStatus;
+            }
+            SymbolTableHelper twin = stHelper.switchTwin(stashed);
             stHelper = twin;
             return RuntimeMeta.createSuccess(null);
         }
 
-        stHelper.useTwin();
+        Stack<Map<String,ValueMeta>> stashed = stHelper.useTwin();
         resStatus = runStmt(ifStmt.thenstmt);
         if (resStatus == null) {
             throw new RuntimeException("thenStmt is not valid");
         }
-        SymbolTableHelper twin = stHelper.popTwin();
+        if (!resStatus.isSuccessful()) {
+            return resStatus;
+        }
+        SymbolTableHelper twin = stHelper.switchTwin(stashed);
         if (ifStmt.elsestmt != null) {
-            stHelper.useTwin();
+            stashed = stHelper.useTwin();
             resStatus = runStmt(ifStmt.elsestmt);
             if (resStatus == null) {
                 throw new RuntimeException("elseStmt is not valid");
             }
-            SymbolTableHelper elseTwin = stHelper.popTwin();
+            if (!resStatus.isSuccessful()) {
+                return resStatus;
+            }
+            SymbolTableHelper elseTwin = stHelper.switchTwin(stashed);
             twin.mergeTwin(elseTwin);
             stHelper = twin;
         } else {
@@ -430,6 +475,9 @@ public final class AbstRuntime implements Runtime {
         if (!resStatus.isSuccessful()) {
             return resStatus;
         }
+        if (!resStatus.hasValue()) {
+            return RuntimeMeta.createError(AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR);
+        }
 
         if (resStatus.getValue().isFalse()) {
             return RuntimeMeta.createError(AstErrorHandler.ErrorCode.DEAD_CODE_ERROR);
@@ -437,7 +485,7 @@ public final class AbstRuntime implements Runtime {
 
         // TODO:
         while (!resStatus.getValue().isFalse()) {
-            stHelper.useTwin();
+            Stack<Map<String,ValueMeta>> stashed = stHelper.useTwin();
             resStatus = runStmt(whileStmt.body);
             if (resStatus == null) {
                 throw new RuntimeException("WhileStmt is not valid");
@@ -445,7 +493,7 @@ public final class AbstRuntime implements Runtime {
             if (!resStatus.isSuccessful()) {
                 return resStatus;
             }
-            SymbolTableHelper twin = stHelper.popTwin();
+            SymbolTableHelper twin = stHelper.switchTwin(stashed);
             if (stHelper.hasIdenticalVal(twin)) {
                 break;
             }

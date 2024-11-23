@@ -1,0 +1,5 @@
+int x = 3;
+int z = -x;
+int w = x-z+5;
+w = w/x;
+x = x/w;

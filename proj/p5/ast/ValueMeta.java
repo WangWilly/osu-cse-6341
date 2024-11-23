@@ -1190,8 +1190,8 @@ public final class ValueMeta {
             put(AbstValue.ANY_INT, AbstValue.ANY_INT);
         }});
         put(AbstValue.ZERO_INT, new HashMap<AbstValue, AbstValue>() {{
-            put(AbstValue.POS_INT, AbstValue.ZERO_INT);
-            put(AbstValue.NEG_INT, AbstValue.ZERO_INT);
+            put(AbstValue.POS_INT, AbstValue.NEG_INT);
+            put(AbstValue.NEG_INT, AbstValue.POS_INT);
             put(AbstValue.ZERO_INT, AbstValue.ZERO_INT);
             put(AbstValue.ANY_INT, AbstValue.ANY_INT);
         }});
@@ -1215,8 +1215,8 @@ public final class ValueMeta {
             put(AbstValue.ANY_FLOAT, AbstValue.ANY_FLOAT);
         }});
         put(AbstValue.ZERO_FLOAT, new HashMap<AbstValue, AbstValue>() {{
-            put(AbstValue.POS_FLOAT, AbstValue.ZERO_FLOAT);
-            put(AbstValue.NEG_FLOAT, AbstValue.ZERO_FLOAT);
+            put(AbstValue.POS_FLOAT, AbstValue.NEG_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.POS_FLOAT);
             put(AbstValue.ZERO_FLOAT, AbstValue.ZERO_FLOAT);
             put(AbstValue.ANY_FLOAT, AbstValue.ANY_FLOAT);
         }});
@@ -1338,14 +1338,14 @@ public final class ValueMeta {
     private static HashMap<AbstValue, HashMap<AbstValue, AbstValue>> divTable = new HashMap<AbstValue, HashMap<AbstValue, AbstValue>>() {{
         // ABST_INT
         put(AbstValue.POS_INT, new HashMap<AbstValue, AbstValue>() {{
-            put(AbstValue.POS_INT, AbstValue.POS_INT);
-            put(AbstValue.NEG_INT, AbstValue.NEG_INT);
+            put(AbstValue.POS_INT, AbstValue.ANY_INT);
+            put(AbstValue.NEG_INT, AbstValue.ANY_INT);
             put(AbstValue.ZERO_INT, AbstValue.ILLEGAL);
             put(AbstValue.ANY_INT, AbstValue.ILLEGAL);
         }});
         put(AbstValue.NEG_INT, new HashMap<AbstValue, AbstValue>() {{
-            put(AbstValue.POS_INT, AbstValue.NEG_INT);
-            put(AbstValue.NEG_INT, AbstValue.POS_INT);
+            put(AbstValue.POS_INT, AbstValue.ANY_INT);
+            put(AbstValue.NEG_INT, AbstValue.ANY_INT);
             put(AbstValue.ZERO_INT, AbstValue.ILLEGAL);
             put(AbstValue.ANY_INT, AbstValue.ILLEGAL);
         }});
@@ -1363,14 +1363,14 @@ public final class ValueMeta {
         }});
         // ABST_FLOAT
         put(AbstValue.POS_FLOAT, new HashMap<AbstValue, AbstValue>() {{
-            put(AbstValue.POS_FLOAT, AbstValue.POS_FLOAT);
-            put(AbstValue.NEG_FLOAT, AbstValue.NEG_FLOAT);
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_FLOAT);
             put(AbstValue.ZERO_FLOAT, AbstValue.ILLEGAL);
             put(AbstValue.ANY_FLOAT, AbstValue.ILLEGAL);
         }});
         put(AbstValue.NEG_FLOAT, new HashMap<AbstValue, AbstValue>() {{
-            put(AbstValue.POS_FLOAT, AbstValue.NEG_FLOAT);
-            put(AbstValue.NEG_FLOAT, AbstValue.POS_FLOAT);
+            put(AbstValue.POS_FLOAT, AbstValue.ANY_FLOAT);
+            put(AbstValue.NEG_FLOAT, AbstValue.ANY_FLOAT);
             put(AbstValue.ZERO_FLOAT, AbstValue.ILLEGAL);
             put(AbstValue.ANY_FLOAT, AbstValue.ILLEGAL);
         }});

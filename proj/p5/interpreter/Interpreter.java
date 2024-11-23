@@ -72,6 +72,9 @@ public class Interpreter {
             if (runtimeMeta.getErrorCode() == AstErrorHandler.ErrorCode.DEAD_CODE_ERROR) {
                 Interpreter.fatalError("Dead code error", EXIT_DEAD_CODE);
             }
+            if (runtimeMeta.getErrorCode() == AstErrorHandler.ErrorCode.UNINITIALIZED_VAR_ERROR) {
+                Interpreter.fatalError("Uncaught uninitialized variable error", EXIT_UNINITIALIZED_VAR_ERROR);
+            }
         }
     }
 
